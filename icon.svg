@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="80" fill="#0f172a"/>
+  <!-- snake body segments -->
+  <rect x="80"  y="200" width="80" height="80" rx="16" fill="#4ade80"/>
+  <rect x="180" y="200" width="80" height="80" rx="16" fill="#34d265"/>
+  <rect x="280" y="200" width="80" height="80" rx="16" fill="#22c55e"/>
+  <!-- head -->
+  <rect x="280" y="100" width="80" height="80" rx="16" fill="#4ade80"/>
+  <!-- eye -->
+  <circle cx="336" cy="128" r="10" fill="#0f172a"/>
+  <!-- food -->
+  <rect x="380" y="300" width="52" height="52" rx="12" fill="#f87171"/>
+</svg>

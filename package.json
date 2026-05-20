@@ -1,0 +1,12 @@
+{
+  "name": "snake-multiplayer",
+  "version": "1.0.0",
+  "description": "Snake game with local multiplayer",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}

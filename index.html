@@ -54,17 +54,8 @@
       min-width: 52px;
     }
 
-    .score-label {
-      font-size: 0.65rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    .score-value {
-      font-size: 1.2rem;
-      font-weight: 700;
-      color: #e2e8f0;
-    }
+    .score-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .score-value { font-size: 1.2rem; font-weight: 700; color: #e2e8f0; }
 
     #canvas-wrap {
       position: relative;
@@ -98,7 +89,6 @@
     }
 
     #overlay.hidden { display: none; }
-
     .panel { display: none; flex-direction: column; align-items: center; gap: 14px; }
     .panel.active { display: flex; }
 
@@ -123,24 +113,10 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    .btn-primary {
-      background: #4ade80;
-      color: #0f172a;
-      box-shadow: 0 0 20px #4ade8066;
-    }
+    .btn-primary  { background: #4ade80; color: #0f172a; box-shadow: 0 0 20px #4ade8066; }
+    .btn-secondary { background: #1e293b; color: #94a3b8; border: 1px solid #334155; }
 
-    .btn-secondary {
-      background: #1e293b;
-      color: #94a3b8;
-      border: 1px solid #334155;
-    }
-
-    .hint-text {
-      color: #475569;
-      font-size: 0.75rem;
-      text-align: center;
-      max-width: 260px;
-    }
+    .hint-text { color: #475569; font-size: 0.75rem; text-align: center; max-width: 260px; }
 
     .char-row { display: flex; gap: 10px; }
     .char-card {
@@ -167,75 +143,37 @@
     #btn-music.muted { color: #334155; }
 
     #ws-input {
-      padding: 10px 14px;
-      font-size: 1rem;
-      background: #1e293b;
-      color: #e2e8f0;
-      border: 1px solid #334155;
-      border-radius: 8px;
-      width: 220px;
-      outline: none;
-      text-align: center;
-      touch-action: manipulation;
-      -webkit-tap-highlight-color: transparent;
+      padding: 10px 14px; font-size: 1rem;
+      background: #1e293b; color: #e2e8f0;
+      border: 1px solid #334155; border-radius: 8px;
+      width: 220px; outline: none; text-align: center;
+      touch-action: manipulation; -webkit-tap-highlight-color: transparent;
     }
-
     #ws-input:focus { border-color: #4ade80; }
-
-    #connect-status {
-      font-size: 0.8rem;
-      color: #f87171;
-      min-height: 1.1em;
-      text-align: center;
-    }
+    #connect-status { font-size: 0.8rem; color: #f87171; min-height: 1.1em; text-align: center; }
 
     .spinner {
-      width: 36px;
-      height: 36px;
-      border: 3px solid #1e293b;
-      border-top-color: #4ade80;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
+      width: 36px; height: 36px;
+      border: 3px solid #1e293b; border-top-color: #4ade80;
+      border-radius: 50%; animation: spin 0.8s linear infinite;
     }
-
     @keyframes spin { to { transform: rotate(360deg); } }
 
     #countdown-num {
-      font-size: 6rem;
-      font-weight: 900;
-      color: #4ade80;
-      text-shadow: 0 0 40px #4ade8088;
-      line-height: 1;
-      display: inline-block;
+      font-size: 6rem; font-weight: 900;
+      color: #4ade80; text-shadow: 0 0 40px #4ade8088;
+      line-height: 1; display: inline-block;
     }
-
     @keyframes pop-in {
       0%   { transform: scale(0.4); opacity: 0; }
       60%  { transform: scale(1.15); opacity: 1; }
       100% { transform: scale(1); opacity: 1; }
     }
-
     .pop { animation: pop-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
 
-    #gameover-title {
-      font-size: 2.2rem;
-      font-weight: 900;
-      color: #4ade80;
-      text-shadow: 0 0 24px #4ade8066;
-    }
-
-    #gameover-msg {
-      color: #94a3b8;
-      font-size: 1rem;
-      text-align: center;
-    }
-
-    #wait-msg {
-      font-size: 0.8rem;
-      color: #64748b;
-      text-align: center;
-    }
-
+    #gameover-title { font-size: 2.2rem; font-weight: 900; color: #4ade80; text-shadow: 0 0 24px #4ade8066; }
+    #gameover-msg   { color: #94a3b8; font-size: 1rem; text-align: center; }
+    #wait-msg       { font-size: 0.8rem; color: #64748b; text-align: center; }
     #wait-msg.hidden { display: none; }
 
     #dpad {
@@ -243,27 +181,14 @@
       display: grid;
       grid-template-areas: ". up ." "left . right" ". down .";
       grid-template-columns: 1fr 1fr 1fr;
-      gap: 6px;
-      width: min(52vw, 180px);
-      padding-bottom: 4px;
+      gap: 6px; width: min(52vw, 180px); padding-bottom: 4px;
     }
-
     .dpad-btn {
-      width: 100%;
-      aspect-ratio: 1;
-      border: none;
-      border-radius: 10px;
-      background: #1e293b;
-      color: #4ade80;
-      font-size: 1.4rem;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      touch-action: manipulation;
-      -webkit-tap-highlight-color: transparent;
+      width: 100%; aspect-ratio: 1; border: none; border-radius: 10px;
+      background: #1e293b; color: #4ade80; font-size: 1.4rem;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      touch-action: manipulation; -webkit-tap-highlight-color: transparent;
     }
-
     .dpad-btn:active { background: #334155; }
     .dpad-btn[data-dir="up"]    { grid-area: up; }
     .dpad-btn[data-dir="left"]  { grid-area: left; }
@@ -300,17 +225,17 @@
       <div id="panel-chars" class="panel">
         <h2 id="chars-title">CHOOSE</h2>
         <div class="char-row">
-          <div class="char-card selected" data-char="snake" style="--cc:#4ade80">
-            <div class="char-pip" style="background:#4ade80;box-shadow:0 0 14px #4ade8099;"></div>
-            <span class="char-label">SNAKE</span>
+          <div class="char-card selected" data-char="croc" style="--cc:#22c55e">
+            <div class="char-pip" style="background:#22c55e;box-shadow:0 0 14px #22c55e99;"></div>
+            <span class="char-label">CROC</span>
           </div>
           <div class="char-card" data-char="dragon" style="--cc:#c084fc">
             <div class="char-pip" style="background:#c084fc;box-shadow:0 0 14px #c084fc99;"></div>
             <span class="char-label">DRAGON</span>
           </div>
-          <div class="char-card" data-char="worm" style="--cc:#fb7185">
-            <div class="char-pip" style="background:#fb7185;box-shadow:0 0 14px #fb718599;"></div>
-            <span class="char-label">WORM</span>
+          <div class="char-card" data-char="otter" style="--cc:#d97706">
+            <div class="char-pip" style="background:#d97706;box-shadow:0 0 14px #d9770699;"></div>
+            <span class="char-label">OTTER</span>
           </div>
         </div>
         <button id="btn-start-char" class="btn btn-primary">PLAY</button>
@@ -367,18 +292,12 @@
 
   // ── characters
   const CHARS = {
-    snake: {
-      color: '#4ade80', width: 14, skip: 25,
-      passes: [
-        { frac: 1.00, color: '#1a5c38', alpha: 0.55, blur: 0  },
-        { frac: 0.65, color: '#228b47', alpha: 0.75, blur: 4  },
-        { frac: 0.30, color: '#34c05a', alpha: 0.90, blur: 9  },
-        { frac: 0.08, color: '#4ade80', alpha: 1.0,  blur: 16 },
-      ],
-      eyeColor: '#0f172a', foodColor: '#f87171', foodGlow: '#f87171',
+    croc: {
+      color: '#22c55e', width: 18, skip: 28,
+      eyeColor: '#fbbf24', foodColor: '#f87171', foodGlow: '#f87171',
     },
     dragon: {
-      color: '#c084fc', width: 20, skip: 30,
+      color: '#c084fc', width: 22, skip: 32,
       passes: [
         { frac: 1.00, color: '#3b0764', alpha: 0.55, blur: 0  },
         { frac: 0.65, color: '#7e22ce', alpha: 0.75, blur: 5  },
@@ -387,30 +306,15 @@
       ],
       eyeColor: '#fde68a', foodColor: '#fbbf24', foodGlow: '#fbbf24',
     },
-    worm: {
-      color: '#fb7185', width: 17, skip: 22,
-      passes: null,
-      eyeColor: '#0f172a', foodColor: '#34d399', foodGlow: '#34d399',
+    otter: {
+      color: '#d97706', width: 18, skip: 24,
+      eyeColor: '#1c1917', foodColor: '#34d399', foodGlow: '#34d399',
     },
   };
 
   // ── Starman-inspired chiptune
-  const MELODY = [
-    659.25, 783.99, 880.00,
-    659.25, 783.99, 932.33,
-    880.00, 659.25, 783.99, 880.00, 1046.50, 932.33,
-    880.00, 698.46, 783.99,
-    659.25, 622.25, 659.25,
-    523.25, 587.33, 493.88,
-  ];
-  const NOTE_DUR = [
-    0.5, 0.5, 1,
-    0.5, 0.5, 1,
-    0.5, 0.5, 0.5, 0.5, 1, 1,
-    0.5, 0.5, 1,
-    0.5, 0.5, 1,
-    0.5, 0.5, 1,
-  ];
+  const MELODY   = [659.25,783.99,880,659.25,783.99,932.33,880,659.25,783.99,880,1046.5,932.33,880,698.46,783.99,659.25,622.25,659.25,523.25,587.33,493.88];
+  const NOTE_DUR = [0.5,0.5,1,0.5,0.5,1,0.5,0.5,0.5,0.5,1,1,0.5,0.5,1,0.5,0.5,1,0.5,0.5,1];
   const BPM = 200;
 
   // ── dom refs
@@ -420,7 +324,7 @@
   const labelLeft     = document.getElementById('label-left');
   const labelRight    = document.getElementById('label-right');
   const valLeft       = document.getElementById('val-left');
-  const valRight      = document.getElementById('v-right') || document.getElementById('val-right');
+  const valRightEl    = document.getElementById('val-right');
   const wsInput       = document.getElementById('ws-input');
   const connectStatus = document.getElementById('connect-status');
   const countdownNum  = document.getElementById('countdown-num');
@@ -432,607 +336,629 @@
   const btnMusic      = document.getElementById('btn-music');
   const charsTitle    = document.getElementById('chars-title');
 
-  const valRightEl    = document.getElementById('val-right');
-
   const wsMeta    = document.querySelector('meta[name="ws-url"]');
   const autoWsUrl = wsMeta ? wsMeta.content : null;
 
   // ── state
-  let mode         = 'menu';
-  let myIndex      = 0;
-  let ws           = null;
-  let cellSz       = 16;
-  let selectedChar = 'snake';
-
-  // solo
+  let mode = 'menu', myIndex = 0, ws = null, cellSz = 16, selectedChar = 'croc';
   let sTrail, sBodyLen, sTurning, sAngle, sFood, sScore, sBest, sRunning, sAnimId;
-  // multi
-  let mPrevState = null, mPrevTime = 0;
-  let mCurrState = null, mCurrTime = 0;
+  let mPrevState = null, mPrevTime = 0, mCurrState = null, mCurrTime = 0;
   let mCols = 25, mRows = 40, mAnimId = null;
-  // music
   let audioCtx = null, gainNode = null;
   let musicMuted = false, musicPlaying = false;
   let musicScheduleId = null, noteIdx = 0, nextNoteTime = 0;
 
-  // ── panel control
-  const PANELS = ['menu', 'chars', 'connect', 'waiting', 'countdown', 'gameover'];
+  const PANELS = ['menu','chars','connect','waiting','countdown','gameover'];
 
   function showPanel(name) {
     overlay.classList.remove('hidden');
-    for (const id of PANELS) {
-      document.getElementById('panel-' + id).classList.toggle('active', id === name);
-    }
+    for (const id of PANELS) document.getElementById('panel-'+id).classList.toggle('active', id===name);
   }
-
   function hideOverlay() {
     overlay.classList.add('hidden');
-    for (const id of PANELS) document.getElementById('panel-' + id).classList.remove('active');
+    for (const id of PANELS) document.getElementById('panel-'+id).classList.remove('active');
   }
 
-  // ── resize
   function resize() {
     const wrap = document.getElementById('canvas-wrap');
     const W = wrap.clientWidth, H = wrap.clientHeight;
     if (mode === 'multi') {
-      cellSz = Math.max(1, Math.floor(Math.min(W / mCols, H / mRows)));
-      canvas.width  = mCols * cellSz;
-      canvas.height = mRows * cellSz;
+      cellSz = Math.max(1, Math.floor(Math.min(W/mCols, H/mRows)));
+      canvas.width = mCols*cellSz; canvas.height = mRows*cellSz;
     } else {
-      canvas.width  = W;
-      canvas.height = H;
+      canvas.width = W; canvas.height = H;
     }
-    canvas.style.width  = canvas.width  + 'px';
-    canvas.style.height = canvas.height + 'px';
+    canvas.style.width = canvas.width+'px'; canvas.style.height = canvas.height+'px';
   }
 
-  // ── score header
   function setScoreHeaderSolo() {
-    labelLeft.style.color  = '';
-    labelRight.style.color = '';
-    labelLeft.textContent  = 'SCORE';
-    labelRight.textContent = 'BEST';
-    valLeft.textContent    = sScore || 0;
-    valRightEl.textContent = sBest  || 0;
+    labelLeft.style.color = ''; labelRight.style.color = '';
+    labelLeft.textContent = 'SCORE'; labelRight.textContent = 'BEST';
+    valLeft.textContent = sScore||0; valRightEl.textContent = sBest||0;
   }
-
   function setScoreHeaderMulti() {
-    if (myIndex === 0) {
-      labelLeft.textContent  = 'YOU';
-      labelRight.textContent = 'THEM';
-      labelLeft.style.color  = '#4ade80';
-      labelRight.style.color = '#fb923c';
-    } else {
-      labelLeft.textContent  = 'THEM';
-      labelRight.textContent = 'YOU';
-      labelLeft.style.color  = '#4ade80';
-      labelRight.style.color = '#fb923c';
-    }
-    valLeft.textContent    = 0;
-    valRightEl.textContent = 0;
+    labelLeft.textContent  = myIndex===0 ? 'YOU'  : 'THEM';
+    labelRight.textContent = myIndex===0 ? 'THEM' : 'YOU';
+    labelLeft.style.color = '#4ade80'; labelRight.style.color = '#fb923c';
+    valLeft.textContent = 0; valRightEl.textContent = 0;
   }
-
   function updateMultiScore(state) {
-    if (!state || !state.snakes) return;
-    const s0 = state.snakes[0] ? state.snakes[0].score : 0;
-    const s1 = state.snakes[1] ? state.snakes[1].score : 0;
-    if (myIndex === 0) { valLeft.textContent = s0; valRightEl.textContent = s1; }
-    else               { valLeft.textContent = s1; valRightEl.textContent = s0; }
+    if (!state||!state.snakes) return;
+    const s0 = state.snakes[0]?state.snakes[0].score:0;
+    const s1 = state.snakes[1]?state.snakes[1].score:0;
+    valLeft.textContent = myIndex===0?s0:s1; valRightEl.textContent = myIndex===0?s1:s0;
   }
 
   // ── multi drawing helpers
-  function roundRect(c, x, y, w, h, r) {
-    r = Math.min(r, w / 2, h / 2);
-    c.beginPath();
-    c.moveTo(x + r, y); c.lineTo(x + w - r, y);
-    c.quadraticCurveTo(x + w, y, x + w, y + r);
-    c.lineTo(x + w, y + h - r);
-    c.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-    c.lineTo(x + r, y + h);
-    c.quadraticCurveTo(x, y + h, x, y + h - r);
-    c.lineTo(x, y + r);
-    c.quadraticCurveTo(x, y, x + r, y);
-    c.closePath();
+  function roundRect(c,x,y,w,h,r) {
+    r=Math.min(r,w/2,h/2); c.beginPath();
+    c.moveTo(x+r,y); c.lineTo(x+w-r,y); c.quadraticCurveTo(x+w,y,x+w,y+r);
+    c.lineTo(x+w,y+h-r); c.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+    c.lineTo(x+r,y+h); c.quadraticCurveTo(x,y+h,x,y+h-r);
+    c.lineTo(x,y+r); c.quadraticCurveTo(x,y,x+r,y); c.closePath();
   }
-
-  function eyePositions(d, c) {
-    const m = c * 0.28, o = c * 0.22;
-    if (d.x ===  1) return [[c - m, o],     [c - m, c - o]];
-    if (d.x === -1) return [[m,     o],     [m,     c - o]];
-    if (d.y === -1) return [[o,     m],     [c - o, m    ]];
-                    return [[o,     c - m], [c - o, c - m]];
+  function eyePositions(d,c) {
+    const m=c*0.28,o=c*0.22;
+    if(d.x===1) return [[c-m,o],[c-m,c-o]];
+    if(d.x===-1) return [[m,o],[m,c-o]];
+    if(d.y===-1) return [[o,m],[c-o,m]];
+    return [[o,c-m],[c-o,c-m]];
   }
-
   function drawGrid() {
-    ctx.fillStyle = '#1e293b';
-    const cols = Math.ceil(canvas.width  / cellSz);
-    const rows = Math.ceil(canvas.height / cellSz);
-    for (let x = 0; x < cols; x++)
-      for (let y = 0; y < rows; y++)
-        ctx.fillRect(x * cellSz + cellSz / 2 - 1, y * cellSz + cellSz / 2 - 1, 2, 2);
+    ctx.fillStyle='#1e293b';
+    const cols=Math.ceil(canvas.width/cellSz), rows=Math.ceil(canvas.height/cellSz);
+    for(let x=0;x<cols;x++) for(let y=0;y<rows;y++)
+      ctx.fillRect(x*cellSz+cellSz/2-1, y*cellSz+cellSz/2-1, 2, 2);
   }
-
   function drawFood(food) {
-    if (!food) return;
-    const c = cellSz;
-    const pulse = 0.6 + 0.4 * Math.sin(Date.now() / 600 * Math.PI * 2);
-    ctx.save();
-    ctx.shadowBlur = 16 * pulse; ctx.shadowColor = '#f87171'; ctx.fillStyle = '#f87171';
-    const r = c * 0.35;
-    roundRect(ctx, food.x * c + c / 2 - r, food.y * c + c / 2 - r, r * 2, r * 2, r * 0.5);
-    ctx.fill();
-    ctx.restore();
+    if(!food) return;
+    const c=cellSz, pulse=0.6+0.4*Math.sin(Date.now()/600*Math.PI*2);
+    ctx.save(); ctx.shadowBlur=16*pulse; ctx.shadowColor='#f87171'; ctx.fillStyle='#f87171';
+    const r=c*0.35;
+    roundRect(ctx, food.x*c+c/2-r, food.y*c+c/2-r, r*2, r*2, r*0.5); ctx.fill(); ctx.restore();
   }
-
-  function drawSnake(body, colorIdx, dir, dead) {
-    if (!body || body.length === 0) return;
-    const c = cellSz;
-    const baseClr = colorIdx === 0 ? '#4ade80' : '#fb923c';
-    ctx.save();
-    if (dead) ctx.globalAlpha = 0.3;
-    body.forEach((seg, i) => {
-      const progress = 1 - i / body.length;
-      const pad = i === 0 ? 1 : 2;
+  function drawSnake(body,colorIdx,dir,dead) {
+    if(!body||!body.length) return;
+    const c=cellSz, baseClr=colorIdx===0?'#4ade80':'#fb923c';
+    ctx.save(); if(dead) ctx.globalAlpha=0.3;
+    body.forEach((seg,i) => {
+      const progress=1-i/body.length, pad=i===0?1:2;
       ctx.save();
-      if (i === 0 && !dead) { ctx.shadowBlur = 14; ctx.shadowColor = baseClr; }
-      ctx.globalAlpha = (dead ? 0.3 : 1) * (0.4 + 0.6 * progress);
-      ctx.fillStyle = colorIdx === 0
-        ? (i === 0 ? '#4ade80' : `hsl(142,70%,${45 + progress * 15}%)`)
-        : (i === 0 ? '#fb923c' : `hsl(25,95%,${48 + progress * 14}%)`);
-      roundRect(ctx, seg.x * c + pad, seg.y * c + pad, c - pad * 2, c - pad * 2, c * 0.25);
-      ctx.fill();
-      ctx.restore();
-      if (i === 0) {
-        ctx.save(); ctx.fillStyle = '#0f172a';
-        const ew = Math.max(2, c * 0.1);
-        eyePositions(dir || { x:1, y:0 }, c).forEach(([ex, ey]) => {
-          ctx.beginPath(); ctx.arc(seg.x * c + ex, seg.y * c + ey, ew, 0, Math.PI * 2); ctx.fill();
-        });
+      if(i===0&&!dead){ctx.shadowBlur=14; ctx.shadowColor=baseClr;}
+      ctx.globalAlpha=(dead?0.3:1)*(0.4+0.6*progress);
+      ctx.fillStyle=colorIdx===0?(i===0?'#4ade80':`hsl(142,70%,${45+progress*15}%)`):(i===0?'#fb923c':`hsl(25,95%,${48+progress*14}%)`);
+      roundRect(ctx, seg.x*c+pad, seg.y*c+pad, c-pad*2, c-pad*2, c*0.25); ctx.fill(); ctx.restore();
+      if(i===0){
+        ctx.save(); ctx.fillStyle='#0f172a';
+        const ew=Math.max(2,c*0.1);
+        eyePositions(dir||{x:1,y:0},c).forEach(([ex,ey])=>{ctx.beginPath();ctx.arc(seg.x*c+ex,seg.y*c+ey,ew,0,Math.PI*2);ctx.fill();});
         ctx.restore();
       }
     });
     ctx.restore();
   }
 
-  // ── solo drawing
+  // ── solo background grid
   function drawFreeGrid() {
-    ctx.fillStyle = '#1e293b';
-    const sp = 28;
-    for (let x = sp; x < canvas.width;  x += sp)
-      for (let y = sp; y < canvas.height; y += sp)
-        ctx.fillRect(x - 1, y - 1, 2, 2);
+    ctx.fillStyle='#1e293b';
+    const sp=28;
+    for(let x=sp;x<canvas.width;x+=sp)
+      for(let y=sp;y<canvas.height;y+=sp)
+        ctx.fillRect(x-1,y-1,2,2);
   }
 
+  // ── food (character-coloured)
   function drawFreeFood(food) {
-    if (!food) return;
-    const ch = CHARS[selectedChar];
-    const pulse = 0.6 + 0.4 * Math.sin(Date.now() / 600 * Math.PI * 2);
-    ctx.save();
-    ctx.shadowBlur = 18 * pulse; ctx.shadowColor = ch.foodGlow; ctx.fillStyle = ch.foodColor;
-    ctx.beginPath(); ctx.arc(food.x, food.y, S_FOOD_R, 0, Math.PI * 2); ctx.fill();
-    ctx.restore();
+    if(!food) return;
+    const ch=CHARS[selectedChar], pulse=0.6+0.4*Math.sin(Date.now()/600*Math.PI*2);
+    ctx.save(); ctx.shadowBlur=18*pulse; ctx.shadowColor=ch.foodGlow; ctx.fillStyle=ch.foodColor;
+    ctx.beginPath(); ctx.arc(food.x,food.y,S_FOOD_R,0,Math.PI*2); ctx.fill(); ctx.restore();
   }
 
-  function drawStrokePasses(pts, ch, passes) {
-    ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.lineWidth = ch.width;
-    for (const p of passes) {
-      const end = Math.min(Math.ceil(pts.length * p.frac), pts.length);
-      if (end < 2) continue;
-      ctx.globalAlpha = p.alpha; ctx.shadowBlur = p.blur;
-      ctx.shadowColor = ch.color; ctx.strokeStyle = p.color;
-      ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y);
-      for (let i = 1; i < end; i++) ctx.lineTo(pts[i].x, pts[i].y);
+  // ── CROCODILE ────────────────────────────────────────────────────────────
+  function drawCroc(pts, angle, ch) {
+    if(pts.length < 2) return;
+    ctx.save();
+    const W = ch.width;
+
+    // body – dark-green 4-pass stroke
+    ctx.lineCap='round'; ctx.lineJoin='round'; ctx.lineWidth=W;
+    const bodyPasses=[
+      {frac:1.00, color:'#052e16', alpha:0.72, blur:0},
+      {frac:0.70, color:'#14532d', alpha:0.85, blur:3},
+      {frac:0.35, color:'#166534', alpha:0.95, blur:7},
+      {frac:0.10, color:'#22c55e', alpha:1.0,  blur:12},
+    ];
+    for(const p of bodyPasses){
+      const end=Math.min(Math.ceil(pts.length*p.frac),pts.length);
+      if(end<2) continue;
+      ctx.globalAlpha=p.alpha; ctx.shadowBlur=p.blur; ctx.shadowColor='#22c55e'; ctx.strokeStyle=p.color;
+      ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y);
+      for(let i=1;i<end;i++) ctx.lineTo(pts[i].x,pts[i].y);
       ctx.stroke();
     }
-  }
 
-  function drawEyes(pts, angle, ch) {
-    ctx.globalAlpha = 1; ctx.shadowBlur = 0; ctx.fillStyle = ch.eyeColor;
-    const ew = Math.max(2, ch.width * 0.18), eD = ch.width * 0.30;
-    const cos = Math.cos(angle), sin = Math.sin(angle);
-    [-1, 1].forEach(side => {
-      ctx.beginPath();
-      ctx.arc(pts[0].x + cos * ch.width * 0.1 + (-sin) * eD * side,
-              pts[0].y + sin * ch.width * 0.1 + ( cos) * eD * side, ew, 0, Math.PI * 2);
-      ctx.fill();
-    });
-  }
-
-  function drawWorm(pts, angle, ch) {
-    if (pts.length < 2) return;
-    ctx.save();
-    drawStrokePasses(pts, ch, [
-      { frac: 1.00, color: '#881337', alpha: 0.55, blur: 0  },
-      { frac: 0.65, color: '#be185d', alpha: 0.75, blur: 4  },
-      { frac: 0.30, color: '#f43f5e', alpha: 0.90, blur: 9  },
-      { frac: 0.08, color: '#fb7185', alpha: 1.0,  blur: 16 },
-    ]);
-    // segmentation rings
-    ctx.globalAlpha = 0.40; ctx.shadowBlur = 0;
-    ctx.strokeStyle = '#881337'; ctx.lineWidth = 2;
-    let dist = 0;
-    for (let i = 1; i < pts.length; i++) {
-      const dx = pts[i].x - pts[i-1].x, dy = pts[i].y - pts[i-1].y;
-      dist += Math.sqrt(dx*dx + dy*dy);
-      if (dist >= 20) {
-        dist -= 20;
-        ctx.beginPath(); ctx.arc(pts[i].x, pts[i].y, ch.width / 2 - 1, 0, Math.PI * 2); ctx.stroke();
+    // legs – every 34px along trail
+    ctx.shadowBlur=0; ctx.lineCap='round';
+    let legDist=20;
+    for(let i=1;i<pts.length-1;i++){
+      const dx=pts[i].x-pts[i-1].x, dy=pts[i].y-pts[i-1].y;
+      const sl=Math.sqrt(dx*dx+dy*dy)||1;
+      legDist+=sl;
+      if(legDist>=34){
+        legDist-=34;
+        const fx=dx/sl, fy=dy/sl;   // forward dir
+        [-1,1].forEach(side=>{
+          const px=-fy*side, py=fx*side; // perpendicular outward
+          const bx=pts[i].x+px*W*0.48, by=pts[i].y+py*W*0.48; // body edge
+          const lx=bx+px*W*0.60-fx*W*0.22, ly=by+py*W*0.60-fy*W*0.22; // knee
+          // upper leg
+          ctx.globalAlpha=0.9; ctx.strokeStyle='#166534'; ctx.lineWidth=3.5;
+          ctx.beginPath(); ctx.moveTo(bx,by); ctx.lineTo(lx,ly); ctx.stroke();
+          // three toes splayed outward
+          ctx.lineWidth=2; ctx.strokeStyle='#14532d';
+          const legDx=lx-bx, legDy=ly-by, legL=Math.sqrt(legDx*legDx+legDy*legDy)||1;
+          const lfx=legDx/legL, lfy=legDy/legL;
+          const lpx=-lfy, lpy=lfx;
+          [[-0.55,0.85],[0,1],[0.55,0.85]].forEach(([sp,fwd])=>{
+            const tdx=lfx*fwd+lpx*sp, tdy=lfy*fwd+lpy*sp;
+            const tl=Math.sqrt(tdx*tdx+tdy*tdy)||1;
+            ctx.beginPath(); ctx.moveTo(lx,ly);
+            ctx.lineTo(lx+tdx/tl*W*0.30, ly+tdy/tl*W*0.30); ctx.stroke();
+          });
+        });
       }
     }
-    drawEyes(pts, angle, ch);
+
+    // scale V-marks along body
+    ctx.strokeStyle='#052e16'; ctx.globalAlpha=0.42; ctx.lineWidth=1.3; ctx.lineCap='round';
+    let scaleDist=8;
+    for(let i=1;i<pts.length;i++){
+      const dx=pts[i].x-pts[i-1].x, dy=pts[i].y-pts[i-1].y;
+      const sl=Math.sqrt(dx*dx+dy*dy)||1; scaleDist+=sl;
+      if(scaleDist>=11){
+        scaleDist-=11;
+        const fx=dx/sl, fy=dy/sl, px=-fy, py=fx;
+        ctx.beginPath();
+        ctx.moveTo(pts[i].x+px*W*0.33, pts[i].y+py*W*0.33);
+        ctx.lineTo(pts[i].x-fx*W*0.18, pts[i].y-fy*W*0.18);
+        ctx.lineTo(pts[i].x-px*W*0.33, pts[i].y-py*W*0.33);
+        ctx.stroke();
+      }
+    }
+
+    // eyes – amber iris + dark slit pupil
+    ctx.globalAlpha=1;
+    const ew=Math.max(2.5,W*0.18), eD=W*0.27;
+    const cos=Math.cos(angle), sin=Math.sin(angle);
+    [-1,1].forEach(side=>{
+      const ex=pts[0].x+cos*W*0.12+(-sin)*eD*side;
+      const ey=pts[0].y+sin*W*0.12+( cos)*eD*side;
+      ctx.fillStyle='#fbbf24'; ctx.shadowBlur=4; ctx.shadowColor='#fbbf24';
+      ctx.beginPath(); ctx.arc(ex,ey,ew,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle='#052e16'; ctx.shadowBlur=0;
+      ctx.beginPath(); ctx.ellipse(ex,ey, ew*0.28, ew*0.72, angle+Math.PI/2, 0, Math.PI*2); ctx.fill();
+    });
+
     ctx.restore();
   }
 
-  function drawFreeSnake(pts, angle) {
-    const ch = CHARS[selectedChar];
-    if (!ch.passes) { drawWorm(pts, angle, ch); return; }
-    if (pts.length < 2) return;
+  // ── DRAGON ───────────────────────────────────────────────────────────────
+  function drawDragon(pts, angle, ch) {
+    if(pts.length < 2) return;
     ctx.save();
-    drawStrokePasses(pts, ch, ch.passes);
-    drawEyes(pts, angle, ch);
+    const W=ch.width;
+
+    // base body – purple 4-pass
+    ctx.lineCap='round'; ctx.lineJoin='round'; ctx.lineWidth=W;
+    for(const p of ch.passes){
+      const end=Math.min(Math.ceil(pts.length*p.frac),pts.length);
+      if(end<2) continue;
+      ctx.globalAlpha=p.alpha; ctx.shadowBlur=p.blur; ctx.shadowColor=ch.color; ctx.strokeStyle=p.color;
+      ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y);
+      for(let i=1;i<end;i++) ctx.lineTo(pts[i].x,pts[i].y);
+      ctx.stroke();
+    }
+
+    // bilateral spines every 14px
+    let spineDist=6;
+    for(let i=1;i<pts.length;i++){
+      const dx=pts[i].x-pts[i-1].x, dy=pts[i].y-pts[i-1].y;
+      const sl=Math.sqrt(dx*dx+dy*dy)||1; spineDist+=sl;
+      if(spineDist>=14){
+        spineDist-=14;
+        const fx=dx/sl, fy=dy/sl, px=-fy, py=fx;
+        const progress=1-i/pts.length;
+        const spH=W*(0.45+0.20*progress);
+        [1,-1].forEach(s=>{
+          const bx=pts[i].x+px*s*W*0.45, by=pts[i].y+py*s*W*0.45;
+          ctx.globalAlpha=0.75*progress;
+          ctx.fillStyle=s===1?'#a855f7':'#9333ea';
+          ctx.shadowBlur=3; ctx.shadowColor='#e879f9';
+          ctx.beginPath();
+          ctx.moveTo(bx,by);
+          ctx.lineTo(bx+px*s*spH, by+py*s*spH);
+          ctx.lineTo(bx+fx*W*0.22, by+fy*W*0.22);
+          ctx.closePath(); ctx.fill();
+        });
+      }
+    }
+
+    // dorsal ridge glow line
+    const ridgeEnd=Math.min(pts.length, Math.ceil(pts.length*0.82));
+    if(ridgeEnd>=2){
+      ctx.globalAlpha=0.55; ctx.shadowBlur=8; ctx.shadowColor='#e879f9';
+      ctx.strokeStyle='#f0abfc'; ctx.lineWidth=2; ctx.lineCap='round';
+      ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y);
+      for(let i=1;i<ridgeEnd;i++) ctx.lineTo(pts[i].x,pts[i].y);
+      ctx.stroke();
+    }
+
+    // eyes – gold, slit pupil
+    ctx.globalAlpha=1;
+    const ew=Math.max(2.5,W*0.18), eD=W*0.28;
+    const cos=Math.cos(angle), sin=Math.sin(angle);
+    [-1,1].forEach(side=>{
+      const ex=pts[0].x+cos*W*0.10+(-sin)*eD*side;
+      const ey=pts[0].y+sin*W*0.10+( cos)*eD*side;
+      ctx.fillStyle='#fde68a'; ctx.shadowBlur=8; ctx.shadowColor='#fbbf24';
+      ctx.beginPath(); ctx.arc(ex,ey,ew,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle='#1a0a2e'; ctx.shadowBlur=0;
+      ctx.beginPath(); ctx.ellipse(ex,ey, ew*0.25, ew*0.72, angle+Math.PI/2, 0, Math.PI*2); ctx.fill();
+    });
+
     ctx.restore();
+  }
+
+  // ── OTTER ────────────────────────────────────────────────────────────────
+  function drawOtter(pts, angle, ch) {
+    if(pts.length < 2) return;
+    ctx.save();
+    const W=ch.width;
+
+    // collect segment centres
+    const segSpacing=W*0.62, segs=[pts[0]];
+    let segDist=0;
+    for(let i=1;i<pts.length;i++){
+      const dx=pts[i].x-pts[i-1].x, dy=pts[i].y-pts[i-1].y;
+      segDist+=Math.sqrt(dx*dx+dy*dy);
+      if(segDist>=segSpacing){segDist-=segSpacing; segs.push(pts[i]);}
+    }
+
+    // draw from tail → head so head is on top
+    for(let i=segs.length-1;i>=1;i--){
+      const progress=1-i/segs.length;
+      const r=W/2*(0.72+0.28*progress);
+      ctx.globalAlpha=0.55+0.45*progress; ctx.shadowBlur=0;
+      ctx.fillStyle=i%2===0?'#92400e':'#a16207';
+      ctx.beginPath(); ctx.arc(segs[i].x,segs[i].y,r,0,Math.PI*2); ctx.fill();
+      // tail stripe bands
+      if(i>segs.length*0.65){
+        ctx.globalAlpha=0.22; ctx.fillStyle='#fef3c7';
+        ctx.beginPath(); ctx.arc(segs[i].x,segs[i].y,r*0.45,0,Math.PI*2); ctx.fill();
+      }
+    }
+
+    // head (larger, rounder, brown)
+    ctx.globalAlpha=1; ctx.shadowBlur=10; ctx.shadowColor=ch.color;
+    ctx.fillStyle='#b45309';
+    ctx.beginPath(); ctx.arc(pts[0].x,pts[0].y, W/2*1.15, 0, Math.PI*2); ctx.fill();
+
+    // cream chest blaze
+    ctx.shadowBlur=0; ctx.globalAlpha=0.65; ctx.fillStyle='#fef3c7';
+    ctx.beginPath(); ctx.arc(pts[0].x,pts[0].y, W/2*0.55, 0, Math.PI*2); ctx.fill();
+
+    // muzzle bump
+    const cos=Math.cos(angle), sin=Math.sin(angle);
+    ctx.globalAlpha=1; ctx.fillStyle='#c2770e';
+    ctx.beginPath(); ctx.arc(pts[0].x+cos*W*0.30, pts[0].y+sin*W*0.30, W*0.24, 0, Math.PI*2); ctx.fill();
+
+    // nose
+    ctx.fillStyle='#1c1917';
+    ctx.beginPath(); ctx.arc(pts[0].x+cos*W*0.46, pts[0].y+sin*W*0.46, W*0.09, 0, Math.PI*2); ctx.fill();
+
+    // eyes with shine
+    const ew=Math.max(2,W*0.15), eD=W*0.27;
+    ctx.fillStyle='#1c1917';
+    [-1,1].forEach(side=>{
+      const ex=pts[0].x+cos*W*0.14+(-sin)*eD*side;
+      const ey=pts[0].y+sin*W*0.14+( cos)*eD*side;
+      ctx.beginPath(); ctx.arc(ex,ey,ew,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle='#e2e8f0';
+      ctx.beginPath(); ctx.arc(ex+cos*ew*0.35,ey+sin*ew*0.35, ew*0.32, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle='#1c1917';
+    });
+
+    // whiskers
+    const mx=pts[0].x+cos*W*0.28, my=pts[0].y+sin*W*0.28;
+    ctx.strokeStyle='#fef3c7'; ctx.lineWidth=0.9; ctx.lineCap='round'; ctx.globalAlpha=0.72;
+    [-1,1].forEach(side=>{
+      [-0.22,0,0.22].forEach(sp=>{
+        const wx=mx+(-sin)*side*W*0.20+cos*sp*W*0.10;
+        const wy=my+( cos)*side*W*0.20+sin*sp*W*0.10;
+        ctx.beginPath();
+        ctx.moveTo(wx,wy);
+        ctx.lineTo(wx+(-sin)*side*W*0.52, wy+( cos)*side*W*0.52);
+        ctx.stroke();
+      });
+    });
+
+    // small round ears on top of head
+    ctx.globalAlpha=1; ctx.fillStyle='#92400e'; ctx.shadowBlur=0;
+    const earD=W*0.30, earR=W*0.15;
+    [-1,1].forEach(side=>{
+      const eax=pts[0].x+(-sin)*side*earD-cos*W*0.22;
+      const eay=pts[0].y+( cos)*side*earD-sin*W*0.22;
+      ctx.beginPath(); ctx.arc(eax,eay,earR,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle='#c2770e'; ctx.globalAlpha=0.6;
+      ctx.beginPath(); ctx.arc(eax,eay,earR*0.55,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle='#92400e'; ctx.globalAlpha=1;
+    });
+
+    ctx.restore();
+  }
+
+  // ── dispatch
+  function drawFreeSnake(pts, angle) {
+    if(selectedChar==='croc')   { drawCroc(pts, angle, CHARS.croc);     return; }
+    if(selectedChar==='dragon') { drawDragon(pts, angle, CHARS.dragon); return; }
+    if(selectedChar==='otter')  { drawOtter(pts, angle, CHARS.otter);   return; }
   }
 
   // ── solo game
   function soloInit() {
-    const ch = CHARS[selectedChar];
-    const W = canvas.width, H = canvas.height;
-    sAngle = 0; sTurning = 0; sBodyLen = S_INIT; sTrail = [];
-    for (let i = 0; i < S_INIT; i++) sTrail.push({ x: W / 2 - i * S_SPEED, y: H / 2 });
-    sScore = 0;
-    spawnSoloFood();
-    setScoreHeaderSolo();
+    const ch=CHARS[selectedChar], W=canvas.width, H=canvas.height;
+    sAngle=0; sTurning=0; sBodyLen=S_INIT; sTrail=[];
+    for(let i=0;i<S_INIT;i++) sTrail.push({x:W/2-i*S_SPEED, y:H/2});
+    sScore=0; spawnSoloFood(); setScoreHeaderSolo();
   }
-
   function spawnSoloFood() {
-    const ch = CHARS[selectedChar];
-    const m = S_FOOD_R + ch.width;
-    sFood = {
-      x: m + Math.random() * (canvas.width  - m * 2),
-      y: m + Math.random() * (canvas.height - m * 2),
-    };
+    const m=S_FOOD_R+CHARS[selectedChar].width;
+    sFood={x:m+Math.random()*(canvas.width-m*2), y:m+Math.random()*(canvas.height-m*2)};
   }
-
   function soloFrame() {
-    if (!sRunning) return;
-    sAnimId = requestAnimationFrame(soloFrame);
-    const ch = CHARS[selectedChar];
-    sAngle += sTurning * S_TURN;
-    const nx = sTrail[0].x + Math.cos(sAngle) * S_SPEED;
-    const ny = sTrail[0].y + Math.sin(sAngle) * S_SPEED;
-    const wall = ch.width / 2;
-    if (nx < wall || nx > canvas.width - wall || ny < wall || ny > canvas.height - wall) return soloOver();
-    const r2 = (ch.width / 2) ** 2;
-    for (let i = ch.skip; i < sTrail.length; i++) {
-      const dx = nx - sTrail[i].x, dy = ny - sTrail[i].y;
-      if (dx * dx + dy * dy < r2) return soloOver();
+    if(!sRunning) return;
+    sAnimId=requestAnimationFrame(soloFrame);
+    const ch=CHARS[selectedChar];
+    sAngle+=sTurning*S_TURN;
+    const nx=sTrail[0].x+Math.cos(sAngle)*S_SPEED;
+    const ny=sTrail[0].y+Math.sin(sAngle)*S_SPEED;
+    const wall=ch.width/2;
+    if(nx<wall||nx>canvas.width-wall||ny<wall||ny>canvas.height-wall) return soloOver();
+    const r2=(ch.width/2)**2;
+    for(let i=ch.skip;i<sTrail.length;i++){
+      const dx=nx-sTrail[i].x, dy=ny-sTrail[i].y;
+      if(dx*dx+dy*dy<r2) return soloOver();
     }
-    const fdx = nx - sFood.x, fdy = ny - sFood.y;
-    const ate = fdx * fdx + fdy * fdy < (S_FOOD_R + ch.width / 2) ** 2;
-    sTrail.unshift({ x: nx, y: ny });
-    if (!ate) {
-      while (sTrail.length > sBodyLen) sTrail.pop();
+    const fdx=nx-sFood.x, fdy=ny-sFood.y;
+    const ate=fdx*fdx+fdy*fdy<(S_FOOD_R+ch.width/2)**2;
+    sTrail.unshift({x:nx,y:ny});
+    if(!ate){
+      while(sTrail.length>sBodyLen) sTrail.pop();
     } else {
-      sScore++; sBodyLen += S_GROW;
-      valLeft.textContent = sScore;
-      if (sScore > sBest) { sBest = sScore; valRightEl.textContent = sBest; localStorage.setItem('snake_best', sBest); }
+      sScore++; sBodyLen+=S_GROW; valLeft.textContent=sScore;
+      if(sScore>sBest){sBest=sScore;valRightEl.textContent=sBest;localStorage.setItem('snake_best',sBest);}
       spawnSoloFood();
     }
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawFreeGrid(); drawFreeFood(sFood); drawFreeSnake(sTrail.slice(0, sBodyLen), sAngle);
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    drawFreeGrid(); drawFreeFood(sFood); drawFreeSnake(sTrail.slice(0,sBodyLen),sAngle);
   }
-
   function soloOver() {
-    sRunning = false;
-    cancelAnimationFrame(sAnimId);
-    stopMusic();
-    gameoverTitle.textContent = 'GAME OVER';
-    gameoverMsg.textContent   = 'Score: ' + sScore;
-    waitMsg.classList.add('hidden');
-    btnPlayAgain.onclick = () => showPanel('chars');
+    sRunning=false; cancelAnimationFrame(sAnimId); stopMusic();
+    gameoverTitle.textContent='GAME OVER'; gameoverMsg.textContent='Score: '+sScore;
+    waitMsg.classList.add('hidden'); btnPlayAgain.onclick=()=>showPanel('chars');
     showPanel('gameover');
   }
-
   function startSolo() {
-    mode = 'solo';
-    sRunning = false;
-    if (sAnimId) cancelAnimationFrame(sAnimId);
+    mode='solo'; sRunning=false;
+    if(sAnimId) cancelAnimationFrame(sAnimId);
     resize(); soloInit(); hideOverlay();
-    sRunning = true;
-    sAnimId  = requestAnimationFrame(soloFrame);
-    startMusic();
+    sRunning=true; sAnimId=requestAnimationFrame(soloFrame); startMusic();
   }
 
-  // ── music (Web Audio API)
+  // ── music
   function ensureAudio() {
-    if (audioCtx) return;
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    gainNode = audioCtx.createGain();
-    gainNode.gain.value = 0.12;
-    gainNode.connect(audioCtx.destination);
+    if(audioCtx) return;
+    audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+    gainNode=audioCtx.createGain(); gainNode.gain.value=0.12; gainNode.connect(audioCtx.destination);
   }
-
-  function scheduleNote(freq, startTime, dur) {
-    const osc = audioCtx.createOscillator();
-    const env = audioCtx.createGain();
-    osc.type = 'square';
-    osc.frequency.value = freq;
-    env.gain.setValueAtTime(0.8, startTime);
-    env.gain.exponentialRampToValueAtTime(0.001, startTime + dur * 0.85);
-    osc.connect(env); env.connect(gainNode);
-    osc.start(startTime); osc.stop(startTime + dur);
+  function scheduleNote(freq,t,dur) {
+    const osc=audioCtx.createOscillator(), env=audioCtx.createGain();
+    osc.type='square'; osc.frequency.value=freq;
+    env.gain.setValueAtTime(0.8,t); env.gain.exponentialRampToValueAtTime(0.001,t+dur*0.85);
+    osc.connect(env); env.connect(gainNode); osc.start(t); osc.stop(t+dur);
   }
-
   function scheduleMusicAhead() {
-    if (!audioCtx || !musicPlaying) return;
-    const beat = 60 / BPM;
-    while (nextNoteTime < audioCtx.currentTime + 0.2) {
-      scheduleNote(MELODY[noteIdx], nextNoteTime, beat * NOTE_DUR[noteIdx] * 0.9);
-      nextNoteTime += beat * NOTE_DUR[noteIdx];
-      noteIdx = (noteIdx + 1) % MELODY.length;
+    if(!audioCtx||!musicPlaying) return;
+    const beat=60/BPM;
+    while(nextNoteTime<audioCtx.currentTime+0.2){
+      scheduleNote(MELODY[noteIdx],nextNoteTime,beat*NOTE_DUR[noteIdx]*0.9);
+      nextNoteTime+=beat*NOTE_DUR[noteIdx];
+      noteIdx=(noteIdx+1)%MELODY.length;
     }
-    musicScheduleId = setTimeout(scheduleMusicAhead, 80);
+    musicScheduleId=setTimeout(scheduleMusicAhead,80);
   }
-
   function startMusic() {
-    if (musicMuted) return;
+    if(musicMuted) return;
     ensureAudio();
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-    musicPlaying = true; noteIdx = 0;
-    nextNoteTime = audioCtx.currentTime + 0.05;
-    scheduleMusicAhead();
+    if(audioCtx.state==='suspended') audioCtx.resume();
+    musicPlaying=true; noteIdx=0; nextNoteTime=audioCtx.currentTime+0.05; scheduleMusicAhead();
   }
-
   function stopMusic() {
-    musicPlaying = false;
-    if (musicScheduleId) { clearTimeout(musicScheduleId); musicScheduleId = null; }
+    musicPlaying=false;
+    if(musicScheduleId){clearTimeout(musicScheduleId);musicScheduleId=null;}
   }
-
   function toggleMusic() {
-    musicMuted = !musicMuted;
-    btnMusic.classList.toggle('muted', musicMuted);
-    localStorage.setItem('snake_music_muted', musicMuted ? '1' : '0');
-    if (musicMuted) {
-      stopMusic();
-    } else if (mode === 'solo' && sRunning) {
-      startMusic();
-    }
+    musicMuted=!musicMuted; btnMusic.classList.toggle('muted',musicMuted);
+    localStorage.setItem('snake_music_muted',musicMuted?'1':'0');
+    if(musicMuted) stopMusic();
+    else if(mode==='solo'&&sRunning) startMusic();
   }
 
   // ── multi game
   function connectToServer(url) {
-    if (!url || !url.trim()) { connectStatus.textContent = 'Enter a server address.'; return; }
-    let wsUrl = url.trim();
-    if (!wsUrl.startsWith('ws://') && !wsUrl.startsWith('wss://')) wsUrl = 'ws://' + wsUrl;
-    connectStatus.textContent = 'Connecting...';
-    if (ws) { try { ws.close(); } catch(_) {} ws = null; }
-    try { ws = new WebSocket(wsUrl); } catch(e) { connectStatus.textContent = 'Invalid address.'; return; }
-    ws.onopen = () => { connectStatus.textContent = ''; };
-    ws.onmessage = (e) => {
-      let msg; try { msg = JSON.parse(e.data); } catch { return; }
-      handleServerMsg(msg);
-    };
-    ws.onerror = () => {
-      if (autoWsUrl) showPanel('menu'); else connectStatus.textContent = 'Connection failed.';
-    };
-    ws.onclose = () => {
-      if (mode === 'multi') {
-        stopMultiLoop();
-        gameoverTitle.textContent = 'DISCONNECTED';
-        gameoverMsg.textContent   = 'Connection to server lost.';
-        waitMsg.classList.add('hidden');
-        btnPlayAgain.onclick = () => goMultiConnect();
-        showPanel('gameover');
+    if(!url||!url.trim()){connectStatus.textContent='Enter a server address.';return;}
+    let wsUrl=url.trim();
+    if(!wsUrl.startsWith('ws://')&&!wsUrl.startsWith('wss://')) wsUrl='ws://'+wsUrl;
+    connectStatus.textContent='Connecting...';
+    if(ws){try{ws.close();}catch(_){}ws=null;}
+    try{ws=new WebSocket(wsUrl);}catch(e){connectStatus.textContent='Invalid address.';return;}
+    ws.onopen=()=>{connectStatus.textContent='';};
+    ws.onmessage=(e)=>{let msg;try{msg=JSON.parse(e.data);}catch{return;}handleServerMsg(msg);};
+    ws.onerror=()=>{if(autoWsUrl)showPanel('menu');else connectStatus.textContent='Connection failed.';};
+    ws.onclose=()=>{
+      if(mode==='multi'){
+        stopMultiLoop(); gameoverTitle.textContent='DISCONNECTED';
+        gameoverMsg.textContent='Connection to server lost.';
+        waitMsg.classList.add('hidden'); btnPlayAgain.onclick=()=>goMultiConnect(); showPanel('gameover');
       }
     };
   }
-
   function handleServerMsg(msg) {
-    switch (msg.type) {
-      case 'joined':
-        myIndex = msg.idx; mCols = msg.cols; mRows = msg.rows;
-        mode = 'multi'; resize(); setScoreHeaderMulti(); showPanel('waiting'); break;
-      case 'waiting': showPanel('waiting'); break;
+    switch(msg.type){
+      case 'joined': myIndex=msg.idx;mCols=msg.cols;mRows=msg.rows;mode='multi';resize();setScoreHeaderMulti();showPanel('waiting');break;
+      case 'waiting': showPanel('waiting');break;
       case 'countdown':
-        showPanel('countdown');
-        countdownNum.classList.remove('pop'); void countdownNum.offsetWidth;
-        countdownNum.textContent = msg.n; countdownNum.classList.add('pop'); break;
+        showPanel('countdown'); countdownNum.classList.remove('pop'); void countdownNum.offsetWidth;
+        countdownNum.textContent=msg.n; countdownNum.classList.add('pop'); break;
       case 'go':
-        mPrevState = null; mCurrState = null; hideOverlay();
-        if (mAnimId) cancelAnimationFrame(mAnimId);
-        mAnimId = requestAnimationFrame(multiDraw); break;
+        mPrevState=null;mCurrState=null;hideOverlay();
+        if(mAnimId)cancelAnimationFrame(mAnimId);mAnimId=requestAnimationFrame(multiDraw);break;
       case 'state':
-        mPrevState = mCurrState; mPrevTime = mCurrTime || (Date.now() - M_TICK);
-        mCurrState = msg.state; mCurrTime = Date.now();
-        updateMultiScore(mCurrState); break;
-      case 'waitRestart': waitMsg.classList.remove('hidden'); break;
-      case 'full':
-        if (autoWsUrl) showPanel('menu'); else connectStatus.textContent = 'Room is full.';
-        ws = null; break;
+        mPrevState=mCurrState;mPrevTime=mCurrTime||(Date.now()-M_TICK);
+        mCurrState=msg.state;mCurrTime=Date.now();updateMultiScore(mCurrState);break;
+      case 'waitRestart': waitMsg.classList.remove('hidden');break;
+      case 'full': if(autoWsUrl)showPanel('menu');else connectStatus.textContent='Room is full.';ws=null;break;
       case 'left':
-        if (mode === 'multi') {
-          stopMultiLoop();
-          gameoverTitle.textContent = 'PLAYER LEFT';
-          gameoverMsg.textContent   = 'The other player disconnected.';
-          waitMsg.classList.add('hidden');
-          btnPlayAgain.onclick = () => goMultiConnect();
-          showPanel('gameover');
-        } break;
+        if(mode==='multi'){
+          stopMultiLoop();gameoverTitle.textContent='PLAYER LEFT';
+          gameoverMsg.textContent='The other player disconnected.';
+          waitMsg.classList.add('hidden');btnPlayAgain.onclick=()=>goMultiConnect();showPanel('gameover');
+        }break;
     }
   }
-
-  function stopMultiLoop() {
-    if (mAnimId) { cancelAnimationFrame(mAnimId); mAnimId = null; }
-  }
-
+  function stopMultiLoop(){if(mAnimId){cancelAnimationFrame(mAnimId);mAnimId=null;}}
   function lerpState() {
-    if (!mCurrState) return null;
-    if (!mPrevState || mCurrState.gameOver) return mCurrState;
-    const interval = Math.max(1, mCurrTime - mPrevTime);
-    const t = Math.min(1.1, (Date.now() - mCurrTime) / interval);
-    return {
-      ...mCurrState,
-      snakes: mCurrState.snakes.map((snake, i) => {
-        const prev = mPrevState.snakes[i];
-        if (!prev || !snake.alive || !prev.alive) return snake;
-        return {
-          ...snake,
-          body: snake.body.map((seg, j) => {
-            const ps = prev.body[j] || seg;
-            return { x: ps.x + (seg.x - ps.x) * t, y: ps.y + (seg.y - ps.y) * t };
-          }),
-        };
-      }),
-    };
+    if(!mCurrState) return null;
+    if(!mPrevState||mCurrState.gameOver) return mCurrState;
+    const interval=Math.max(1,mCurrTime-mPrevTime), t=Math.min(1.1,(Date.now()-mCurrTime)/interval);
+    return{...mCurrState, snakes:mCurrState.snakes.map((snake,i)=>{
+      const prev=mPrevState.snakes[i];
+      if(!prev||!snake.alive||!prev.alive) return snake;
+      return{...snake,body:snake.body.map((seg,j)=>{
+        const ps=prev.body[j]||seg;
+        return{x:ps.x+(seg.x-ps.x)*t,y:ps.y+(seg.y-ps.y)*t};
+      })};
+    })};
   }
-
   function multiDraw() {
-    const state = lerpState();
-    if (!state) { mAnimId = requestAnimationFrame(multiDraw); return; }
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawGrid(); drawFood(state.food);
-    state.snakes.forEach((snake, i) => drawSnake(snake.body, i, snake.dir, !snake.alive));
-    if (mCurrState && mCurrState.gameOver) {
-      mAnimId = null;
-      const w = mCurrState.winner;
-      if (w === -1)           { gameoverTitle.textContent = 'TIE!';     gameoverMsg.textContent = 'Both snakes died.'; }
-      else if (w === myIndex) { gameoverTitle.textContent = 'YOU WIN!'; gameoverMsg.textContent = 'Nice work.'; }
-      else                    { gameoverTitle.textContent = 'YOU LOSE'; gameoverMsg.textContent = 'Better luck next time.'; }
-      waitMsg.classList.add('hidden');
-      btnPlayAgain.onclick = multiRestart;
-      showPanel('gameover'); return;
+    const state=lerpState();
+    if(!state){mAnimId=requestAnimationFrame(multiDraw);return;}
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    drawGrid();drawFood(state.food);
+    state.snakes.forEach((snake,i)=>drawSnake(snake.body,i,snake.dir,!snake.alive));
+    if(mCurrState&&mCurrState.gameOver){
+      mAnimId=null;
+      const w=mCurrState.winner;
+      if(w===-1)          {gameoverTitle.textContent='TIE!';    gameoverMsg.textContent='Both died.';}
+      else if(w===myIndex){gameoverTitle.textContent='YOU WIN!';gameoverMsg.textContent='Nice work.';}
+      else                {gameoverTitle.textContent='YOU LOSE';gameoverMsg.textContent='Better luck next time.';}
+      waitMsg.classList.add('hidden');btnPlayAgain.onclick=multiRestart;showPanel('gameover');return;
     }
-    mAnimId = requestAnimationFrame(multiDraw);
+    mAnimId=requestAnimationFrame(multiDraw);
   }
-
-  function multiRestart() {
-    if (ws && ws.readyState === 1) {
-      ws.send(JSON.stringify({ type: 'restart' }));
-      waitMsg.classList.remove('hidden');
-    }
-  }
+  function multiRestart(){if(ws&&ws.readyState===1){ws.send(JSON.stringify({type:'restart'}));waitMsg.classList.remove('hidden');}}
 
   // ── navigation
-  function goMultiConnect() {
-    if (ws) { try { ws.close(); } catch(_) {} ws = null; }
-    connectStatus.textContent = '';
-    if (autoWsUrl) { showPanel('waiting'); connectToServer(autoWsUrl); }
-    else { mode = 'menu'; showPanel('connect'); }
+  function goMultiConnect(){
+    if(ws){try{ws.close();}catch(_){}ws=null;}
+    connectStatus.textContent='';
+    if(autoWsUrl){showPanel('waiting');connectToServer(autoWsUrl);}
+    else{mode='menu';showPanel('connect');}
   }
-
-  function goMenu() {
-    sRunning = false; cancelAnimationFrame(sAnimId);
-    stopMultiLoop(); stopMusic();
-    if (ws) { try { ws.close(); } catch(_) {} ws = null; }
-    mode = 'menu'; setScoreHeaderSolo();
-    valLeft.textContent = sScore || 0; valRightEl.textContent = sBest || 0;
+  function goMenu(){
+    sRunning=false;cancelAnimationFrame(sAnimId);stopMultiLoop();stopMusic();
+    if(ws){try{ws.close();}catch(_){}ws=null;}
+    mode='menu';setScoreHeaderSolo();valLeft.textContent=sScore||0;valRightEl.textContent=sBest||0;
     showPanel('menu');
   }
 
   // ── character selection
-  function selectChar(id) {
-    selectedChar = id;
-    localStorage.setItem('snake_char', id);
-    document.querySelectorAll('.char-card').forEach(el => {
-      el.classList.toggle('selected', el.dataset.char === id);
-    });
-    if (charsTitle) {
-      charsTitle.style.color = CHARS[id].color;
-      charsTitle.style.textShadow = `0 0 24px ${CHARS[id].color}66`;
-    }
+  function selectChar(id){
+    if(!CHARS[id]) id='croc';
+    selectedChar=id; localStorage.setItem('snake_char',id);
+    document.querySelectorAll('.char-card').forEach(el=>el.classList.toggle('selected',el.dataset.char===id));
+    if(charsTitle){charsTitle.style.color=CHARS[id].color;charsTitle.style.textShadow=`0 0 24px ${CHARS[id].color}66`;}
   }
 
   // ── input
-  const DPAD_MAP = { up:{x:0,y:-1}, down:{x:0,y:1}, left:{x:-1,y:0}, right:{x:1,y:0} };
-  const KEY_MAP  = {
-    ArrowUp:{x:0,y:-1}, ArrowDown:{x:0,y:1}, ArrowLeft:{x:-1,y:0}, ArrowRight:{x:1,y:0},
-    w:{x:0,y:-1}, s:{x:0,y:1}, a:{x:-1,y:0}, d:{x:1,y:0},
-  };
+  const DPAD_MAP={up:{x:0,y:-1},down:{x:0,y:1},left:{x:-1,y:0},right:{x:1,y:0}};
+  const KEY_MAP={ArrowUp:{x:0,y:-1},ArrowDown:{x:0,y:1},ArrowLeft:{x:-1,y:0},ArrowRight:{x:1,y:0},w:{x:0,y:-1},s:{x:0,y:1},a:{x:-1,y:0},d:{x:1,y:0}};
+  function sendMultiDir(d){if(ws&&ws.readyState===1)ws.send(JSON.stringify({type:'dir',dir:d}));}
 
-  function sendMultiDir(d) { if (ws && ws.readyState === 1) ws.send(JSON.stringify({ type: 'dir', dir: d })); }
-
-  document.addEventListener('keydown', e => {
-    if (mode === 'solo') {
-      if (e.key === 'ArrowLeft'  || e.key === 'a') { e.preventDefault(); sTurning = -1; }
-      if (e.key === 'ArrowRight' || e.key === 'd') { e.preventDefault(); sTurning =  1; }
-      if (e.key === 'ArrowUp'    || e.key === 'w') { e.preventDefault(); sTurning =  0; }
-      if (e.key === 'ArrowDown'  || e.key === 's') { e.preventDefault(); sTurning =  0; }
-    } else if (mode === 'multi') {
-      const d = KEY_MAP[e.key]; if (d) { e.preventDefault(); sendMultiDir(d); }
-    }
+  document.addEventListener('keydown',e=>{
+    if(mode==='solo'){
+      if(e.key==='ArrowLeft' ||e.key==='a'){e.preventDefault();sTurning=-1;}
+      if(e.key==='ArrowRight'||e.key==='d'){e.preventDefault();sTurning= 1;}
+      if(e.key==='ArrowUp'   ||e.key==='w'){e.preventDefault();sTurning= 0;}
+      if(e.key==='ArrowDown' ||e.key==='s'){e.preventDefault();sTurning= 0;}
+    } else if(mode==='multi'){const d=KEY_MAP[e.key];if(d){e.preventDefault();sendMultiDir(d);}}
   });
-  document.addEventListener('keyup', e => {
-    if (mode === 'solo' && ['ArrowLeft','a','ArrowRight','d'].includes(e.key)) sTurning = 0;
-  });
+  document.addEventListener('keyup',e=>{if(mode==='solo'&&['ArrowLeft','a','ArrowRight','d'].includes(e.key))sTurning=0;});
 
-  document.querySelectorAll('.dpad-btn').forEach(el => {
-    const dir = el.dataset.dir;
-    const soloStart = () => { sTurning = dir === 'left' ? -1 : dir === 'right' ? 1 : 0; };
-    const soloEnd   = () => { if (dir === 'left' || dir === 'right') sTurning = 0; };
-    el.addEventListener('touchstart', e => { e.preventDefault(); if (mode === 'solo') soloStart(); else sendMultiDir(DPAD_MAP[dir]); }, { passive: false });
-    el.addEventListener('touchend',  () => { if (mode === 'solo') soloEnd(); });
-    el.addEventListener('mousedown', () => { if (mode === 'solo') soloStart(); else sendMultiDir(DPAD_MAP[dir]); });
-    el.addEventListener('mouseup',   () => { if (mode === 'solo') soloEnd(); });
+  document.querySelectorAll('.dpad-btn').forEach(el=>{
+    const dir=el.dataset.dir;
+    const soloStart=()=>{sTurning=dir==='left'?-1:dir==='right'?1:0;};
+    const soloEnd=()=>{if(dir==='left'||dir==='right')sTurning=0;};
+    el.addEventListener('touchstart',e=>{e.preventDefault();if(mode==='solo')soloStart();else sendMultiDir(DPAD_MAP[dir]);},{passive:false});
+    el.addEventListener('touchend',()=>{if(mode==='solo')soloEnd();});
+    el.addEventListener('mousedown',()=>{if(mode==='solo')soloStart();else sendMultiDir(DPAD_MAP[dir]);});
+    el.addEventListener('mouseup',()=>{if(mode==='solo')soloEnd();});
   });
 
-  let swipeStart = null, soloTouchId = null;
-  canvas.addEventListener('touchstart', e => {
-    if (mode === 'solo') {
-      const touch = e.touches[0]; soloTouchId = touch.identifier;
-      const rect = canvas.getBoundingClientRect();
-      sTurning = (touch.clientX - rect.left) < rect.width / 2 ? -1 : 1;
-    } else { swipeStart = { x: e.touches[0].clientX, y: e.touches[0].clientY }; }
-  }, { passive: true });
-  canvas.addEventListener('touchmove', e => {
-    if (mode === 'solo') {
-      const touch = Array.from(e.changedTouches).find(t => t.identifier === soloTouchId);
-      if (touch) { const rect = canvas.getBoundingClientRect(); sTurning = (touch.clientX - rect.left) < rect.width / 2 ? -1 : 1; }
+  let swipeStart=null, soloTouchId=null;
+  canvas.addEventListener('touchstart',e=>{
+    if(mode==='solo'){const t=e.touches[0];soloTouchId=t.identifier;const r=canvas.getBoundingClientRect();sTurning=(t.clientX-r.left)<r.width/2?-1:1;}
+    else{swipeStart={x:e.touches[0].clientX,y:e.touches[0].clientY};}
+  },{passive:true});
+  canvas.addEventListener('touchmove',e=>{
+    if(mode==='solo'){const t=Array.from(e.changedTouches).find(t=>t.identifier===soloTouchId);if(t){const r=canvas.getBoundingClientRect();sTurning=(t.clientX-r.left)<r.width/2?-1:1;}}
+  },{passive:true});
+  canvas.addEventListener('touchend',e=>{
+    if(mode==='solo'){if(Array.from(e.changedTouches).some(t=>t.identifier===soloTouchId)){sTurning=0;soloTouchId=null;}}
+    else{
+      if(!swipeStart)return;
+      const t=e.changedTouches[0],dx=t.clientX-swipeStart.x,dy=t.clientY-swipeStart.y;swipeStart=null;
+      if(Math.abs(dx)<10&&Math.abs(dy)<10)return;
+      sendMultiDir(Math.abs(dx)>Math.abs(dy)?(dx>0?{x:1,y:0}:{x:-1,y:0}):(dy>0?{x:0,y:1}:{x:0,y:-1}));
     }
-  }, { passive: true });
-  canvas.addEventListener('touchend', e => {
-    if (mode === 'solo') {
-      if (Array.from(e.changedTouches).some(t => t.identifier === soloTouchId)) { sTurning = 0; soloTouchId = null; }
-    } else {
-      if (!swipeStart) return;
-      const t = e.changedTouches[0];
-      const dx = t.clientX - swipeStart.x, dy = t.clientY - swipeStart.y;
-      swipeStart = null;
-      if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return;
-      sendMultiDir(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? {x:1,y:0} : {x:-1,y:0}) : (dy > 0 ? {x:0,y:1} : {x:0,y:-1}));
-    }
-  }, { passive: true });
+  },{passive:true});
 
   // ── button wiring
-  document.getElementById('btn-solo').addEventListener('click', () => showPanel('chars'));
-
-  document.querySelectorAll('.char-card').forEach(el => {
-    el.addEventListener('click', () => selectChar(el.dataset.char));
-    el.addEventListener('touchend', e => { e.preventDefault(); selectChar(el.dataset.char); });
+  document.getElementById('btn-solo').addEventListener('click',()=>showPanel('chars'));
+  document.querySelectorAll('.char-card').forEach(el=>{
+    el.addEventListener('click',()=>selectChar(el.dataset.char));
+    el.addEventListener('touchend',e=>{e.preventDefault();selectChar(el.dataset.char);});
   });
-
-  document.getElementById('btn-start-char').addEventListener('click', startSolo);
-  document.getElementById('btn-chars-back').addEventListener('click', () => showPanel('menu'));
-  document.getElementById('btn-multi').addEventListener('click', goMultiConnect);
-  document.getElementById('btn-connect').addEventListener('click', () => connectToServer(wsInput.value));
-  wsInput.addEventListener('keydown', e => { if (e.key === 'Enter') connectToServer(wsInput.value); });
-  document.getElementById('btn-back').addEventListener('click', () => {
-    if (ws) { try { ws.close(); } catch(_) {} ws = null; }
-    showPanel('menu');
-  });
-  btnMenu.addEventListener('click', goMenu);
-  btnMusic.addEventListener('click', toggleMusic);
-  window.addEventListener('resize', resize);
+  document.getElementById('btn-start-char').addEventListener('click',startSolo);
+  document.getElementById('btn-chars-back').addEventListener('click',()=>showPanel('menu'));
+  document.getElementById('btn-multi').addEventListener('click',goMultiConnect);
+  document.getElementById('btn-connect').addEventListener('click',()=>connectToServer(wsInput.value));
+  wsInput.addEventListener('keydown',e=>{if(e.key==='Enter')connectToServer(wsInput.value);});
+  document.getElementById('btn-back').addEventListener('click',()=>{if(ws){try{ws.close();}catch(_){}ws=null;}showPanel('menu');});
+  btnMenu.addEventListener('click',goMenu);
+  btnMusic.addEventListener('click',toggleMusic);
+  window.addEventListener('resize',resize);
 
   // ── boot
-  sBest = parseInt(localStorage.getItem('snake_best') || '0');
-  sScore = 0;
-  selectedChar = localStorage.getItem('snake_char') || 'snake';
-  musicMuted   = localStorage.getItem('snake_music_muted') === '1';
-  btnMusic.classList.toggle('muted', musicMuted);
+  sBest=parseInt(localStorage.getItem('snake_best')||'0');
+  sScore=0;
+  selectedChar=localStorage.getItem('snake_char')||'croc';
+  if(!CHARS[selectedChar]) selectedChar='croc';
+  musicMuted=localStorage.getItem('snake_music_muted')==='1';
+  btnMusic.classList.toggle('muted',musicMuted);
   selectChar(selectedChar);
-  resize();
-  setScoreHeaderSolo();
-  valRightEl.textContent = sBest;
+  resize(); setScoreHeaderSolo(); valRightEl.textContent=sBest;
   showPanel('menu');
 })();
 </script>

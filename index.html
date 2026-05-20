@@ -275,7 +275,7 @@
         <h2>SNAKE</h2>
         <button id="btn-solo" class="btn btn-primary">SOLO</button>
         <button id="btn-multi" class="btn btn-secondary">2 PLAYER (WiFi)</button>
-        <p class="hint-text">2 Player needs <code>node server.js</code></p>
+        <p class="hint-text">Hold left/right to steer &nbsp;|&nbsp; 2 Player needs <code>node server.js</code></p>
       </div>
 
       <div id="panel-connect" class="panel">
@@ -318,22 +318,32 @@
 
 <script>
 (() => {
+  // ── constants
+  const S_SPEED  = 2.0;           // solo px/frame
+  const S_TURN   = Math.PI / 58;  // solo radians/frame
+  const S_WIDTH  = 14;            // solo snake px width
+  const S_INIT   = 100;           // solo initial trail length
+  const S_GROW   = 50;            // solo trail growth per food
+  const S_FOOD_R = 10;            // solo food radius px
+  const S_SKIP   = 25;            // solo self-collision skip frames
+  const M_TICK   = 150;           // must match server TICK_MS
+
   // ── dom refs
-  const canvas       = document.getElementById('canvas');
-  const ctx          = canvas.getContext('2d');
-  const overlay      = document.getElementById('overlay');
-  const labelLeft    = document.getElementById('label-left');
-  const labelRight   = document.getElementById('label-right');
-  const valLeft      = document.getElementById('val-left');
-  const valRight     = document.getElementById('val-right');
-  const wsInput      = document.getElementById('ws-input');
-  const connectStatus= document.getElementById('connect-status');
-  const countdownNum = document.getElementById('countdown-num');
-  const gameoverTitle= document.getElementById('gameover-title');
-  const gameoverMsg  = document.getElementById('gameover-msg');
-  const waitMsg      = document.getElementById('wait-msg');
-  const btnPlayAgain = document.getElementById('btn-play-again');
-  const btnMenu      = document.getElementById('btn-menu');
+  const canvas        = document.getElementById('canvas');
+  const ctx           = canvas.getContext('2d');
+  const overlay       = document.getElementById('overlay');
+  const labelLeft     = document.getElementById('label-left');
+  const labelRight    = document.getElementById('label-right');
+  const valLeft       = document.getElementById('val-left');
+  const valRight      = document.getElementById('val-right');
+  const wsInput       = document.getElementById('ws-input');
+  const connectStatus = document.getElementById('connect-status');
+  const countdownNum  = document.getElementById('countdown-num');
+  const gameoverTitle = document.getElementById('gameover-title');
+  const gameoverMsg   = document.getElementById('gameover-msg');
+  const waitMsg       = document.getElementById('wait-msg');
+  const btnPlayAgain  = document.getElementById('btn-play-again');
+  const btnMenu       = document.getElementById('btn-menu');
 
   const wsMeta    = document.querySelector('meta[name="ws-url"]');
   const autoWsUrl = wsMeta ? wsMeta.content : null;
@@ -344,8 +354,12 @@
   let ws      = null;
   let cellSz  = 16;
 
-  let sSnake, sDir, sNextDir, sFood, sScore, sBest, sRunning, sCols, sRows, sLastTick, sAnimId;
-  let mState = null, mCols = 25, mRows = 40, mAnimId = null;
+  // solo – free movement
+  let sTrail, sBodyLen, sTurning, sAngle, sFood, sScore, sBest, sRunning, sAnimId;
+  // multi – interpolated rendering
+  let mPrevState = null, mPrevTime = 0;
+  let mCurrState = null, mCurrTime = 0;
+  let mCols = 25, mRows = 40, mAnimId = null;
 
   // ── panel control
   const PANELS = ['menu', 'connect', 'waiting', 'countdown', 'gameover'];
@@ -365,21 +379,15 @@
   // ── resize
   function resize() {
     const wrap = document.getElementById('canvas-wrap');
-    const W = wrap.clientWidth;
-    const H = wrap.clientHeight;
-
+    const W = wrap.clientWidth, H = wrap.clientHeight;
     if (mode === 'multi') {
       cellSz = Math.max(1, Math.floor(Math.min(W / mCols, H / mRows)));
       canvas.width  = mCols * cellSz;
       canvas.height = mRows * cellSz;
     } else {
-      cellSz = Math.max(1, Math.floor(Math.min(W, H) / 20));
-      sCols  = Math.max(1, Math.floor(W / cellSz));
-      sRows  = Math.max(1, Math.floor(H / cellSz));
-      canvas.width  = sCols * cellSz;
-      canvas.height = sRows * cellSz;
+      canvas.width  = W;
+      canvas.height = H;
     }
-
     canvas.style.width  = canvas.width  + 'px';
     canvas.style.height = canvas.height + 'px';
   }
@@ -517,60 +525,126 @@
     ctx.restore();
   }
 
-  // ── solo game
+  // ── solo drawing (free-movement)
+  function drawFreeGrid() {
+    ctx.fillStyle = '#1e293b';
+    const sp = 28;
+    for (let x = sp; x < canvas.width;  x += sp)
+      for (let y = sp; y < canvas.height; y += sp)
+        ctx.fillRect(x - 1, y - 1, 2, 2);
+  }
+
+  function drawFreeFood(food) {
+    if (!food) return;
+    const pulse = 0.6 + 0.4 * Math.sin(Date.now() / 600 * Math.PI * 2);
+    ctx.save();
+    ctx.shadowBlur = 18 * pulse; ctx.shadowColor = '#f87171';
+    ctx.fillStyle  = '#f87171';
+    ctx.beginPath();
+    ctx.arc(food.x, food.y, S_FOOD_R, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawFreeSnake(pts, angle) {
+    if (pts.length < 2) return;
+    ctx.save();
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.lineWidth = S_WIDTH;
+
+    // 4-pass fade from tail (dark) → head (bright)
+    const passes = [
+      { end: pts.length,                           color: '#1a5c38', alpha: 0.55, blur: 0  },
+      { end: Math.floor(pts.length * 0.65) | 0,    color: '#228b47', alpha: 0.75, blur: 4  },
+      { end: Math.floor(pts.length * 0.30) | 0,    color: '#34c05a', alpha: 0.90, blur: 9  },
+      { end: Math.max(2, pts.length * 0.08 | 0),   color: '#4ade80', alpha: 1.0,  blur: 16 },
+    ];
+    for (const p of passes) {
+      const end = Math.min(p.end, pts.length);
+      if (end < 2) continue;
+      ctx.globalAlpha = p.alpha; ctx.shadowBlur = p.blur;
+      ctx.shadowColor = '#4ade80'; ctx.strokeStyle = p.color;
+      ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y);
+      for (let i = 1; i < end; i++) ctx.lineTo(pts[i].x, pts[i].y);
+      ctx.stroke();
+    }
+
+    // eyes
+    ctx.globalAlpha = 1; ctx.shadowBlur = 0; ctx.fillStyle = '#0f172a';
+    const ew  = Math.max(2, S_WIDTH * 0.18);
+    const eD  = S_WIDTH * 0.30;
+    const cos = Math.cos(angle), sin = Math.sin(angle);
+    [-1, 1].forEach(side => {
+      ctx.beginPath();
+      ctx.arc(
+        pts[0].x + cos * S_WIDTH * 0.1 + (-sin) * eD * side,
+        pts[0].y + sin * S_WIDTH * 0.1 + ( cos) * eD * side,
+        ew, 0, Math.PI * 2
+      );
+      ctx.fill();
+    });
+    ctx.restore();
+  }
+
+  // ── solo game (free movement + turning radius)
   function soloInit() {
-    const mx = Math.floor(sCols / 2);
-    const my = Math.floor(sRows / 2);
-    sSnake   = [{ x: mx, y: my }, { x: mx - 1, y: my }, { x: mx - 2, y: my }];
-    sDir     = { x: 1, y: 0 };
-    sNextDir = { x: 1, y: 0 };
+    const W = canvas.width, H = canvas.height;
+    sAngle   = 0;
+    sTurning = 0;
+    sBodyLen = S_INIT;
+    sTrail   = [];
+    for (let i = 0; i < S_INIT; i++) sTrail.push({ x: W / 2 - i * S_SPEED, y: H / 2 });
     sScore   = 0;
     spawnSoloFood();
     setScoreHeaderSolo();
   }
 
   function spawnSoloFood() {
-    const occupied = new Set(sSnake.map(s => s.x + ',' + s.y));
-    let f;
-    do {
-      f = { x: Math.floor(Math.random() * sCols), y: Math.floor(Math.random() * sRows) };
-    } while (occupied.has(f.x + ',' + f.y));
-    sFood = f;
+    const m = S_FOOD_R + S_WIDTH;
+    sFood = {
+      x: m + Math.random() * (canvas.width  - m * 2),
+      y: m + Math.random() * (canvas.height - m * 2),
+    };
   }
 
-  function soloTick(ts) {
+  function soloFrame() {
     if (!sRunning) return;
-    sAnimId = requestAnimationFrame(soloTick);
+    sAnimId = requestAnimationFrame(soloFrame);
 
-    const speed = Math.max(65, 160 - sScore * 3);
-    if (ts - sLastTick < speed) return;
-    sLastTick = ts;
+    sAngle += sTurning * S_TURN;
 
-    sDir = { ...sNextDir };
-    const head = { x: sSnake[0].x + sDir.x, y: sSnake[0].y + sDir.y };
+    const nx = sTrail[0].x + Math.cos(sAngle) * S_SPEED;
+    const ny = sTrail[0].y + Math.sin(sAngle) * S_SPEED;
 
-    if (head.x < 0 || head.x >= sCols || head.y < 0 || head.y >= sRows) { soloOver(); return; }
-    if (sSnake.some(s => s.x === head.x && s.y === head.y))               { soloOver(); return; }
+    // wall
+    const wall = S_WIDTH / 2;
+    if (nx < wall || nx > canvas.width - wall || ny < wall || ny > canvas.height - wall) return soloOver();
 
-    sSnake.unshift(head);
+    // self
+    const r2 = (S_WIDTH / 2) ** 2;
+    for (let i = S_SKIP; i < sTrail.length; i++) {
+      const dx = nx - sTrail[i].x, dy = ny - sTrail[i].y;
+      if (dx * dx + dy * dy < r2) return soloOver();
+    }
 
-    if (head.x === sFood.x && head.y === sFood.y) {
-      sScore++;
-      valLeft.textContent = sScore;
-      if (sScore > sBest) {
-        sBest = sScore;
-        valRight.textContent = sBest;
-        localStorage.setItem('snake_best', sBest);
-      }
-      spawnSoloFood();
+    // food
+    const fdx = nx - sFood.x, fdy = ny - sFood.y;
+    const ate = fdx * fdx + fdy * fdy < (S_FOOD_R + S_WIDTH / 2) ** 2;
+
+    sTrail.unshift({ x: nx, y: ny });
+    if (!ate) {
+      while (sTrail.length > sBodyLen) sTrail.pop();
     } else {
-      sSnake.pop();
+      sScore++;
+      sBodyLen += S_GROW;
+      valLeft.textContent = sScore;
+      if (sScore > sBest) { sBest = sScore; valRight.textContent = sBest; localStorage.setItem('snake_best', sBest); }
+      spawnSoloFood();
     }
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawGrid();
-    drawFood(sFood);
-    drawSnake(sSnake, 0, sDir, false);
+    drawFreeGrid();
+    drawFreeFood(sFood);
+    drawFreeSnake(sTrail.slice(0, sBodyLen), sAngle);
   }
 
   function soloOver() {
@@ -584,15 +658,14 @@
   }
 
   function startSolo() {
-    mode     = 'solo';
+    mode = 'solo';
     sRunning = false;
-    cancelAnimationFrame(sAnimId);
+    if (sAnimId) cancelAnimationFrame(sAnimId);
     resize();
     soloInit();
     hideOverlay();
-    sRunning  = true;
-    sLastTick = 0;
-    sAnimId   = requestAnimationFrame(soloTick);
+    sRunning = true;
+    sAnimId  = requestAnimationFrame(soloFrame);
   }
 
   // ── multi game
@@ -661,14 +734,18 @@
         break;
 
       case 'go':
+        mPrevState = null; mCurrState = null;
         hideOverlay();
-        mState  = null;
+        if (mAnimId) cancelAnimationFrame(mAnimId);
         mAnimId = requestAnimationFrame(multiDraw);
         break;
 
       case 'state':
-        mState = msg.state;
-        updateMultiScore(mState);
+        mPrevState = mCurrState;
+        mPrevTime  = mCurrTime || (Date.now() - M_TICK);
+        mCurrState = msg.state;
+        mCurrTime  = Date.now();
+        updateMultiScore(mCurrState);
         break;
 
       case 'waitRestart':
@@ -698,33 +775,44 @@
     if (mAnimId) { cancelAnimationFrame(mAnimId); mAnimId = null; }
   }
 
+  function lerpState() {
+    if (!mCurrState) return null;
+    if (!mPrevState || mCurrState.gameOver) return mCurrState;
+    const interval = Math.max(1, mCurrTime - mPrevTime);
+    const t = Math.min(1.1, (Date.now() - mCurrTime) / interval);
+    return {
+      ...mCurrState,
+      snakes: mCurrState.snakes.map((snake, i) => {
+        const prev = mPrevState.snakes[i];
+        if (!prev || !snake.alive || !prev.alive) return snake;
+        return {
+          ...snake,
+          body: snake.body.map((seg, j) => {
+            const ps = prev.body[j] || seg;
+            return { x: ps.x + (seg.x - ps.x) * t, y: ps.y + (seg.y - ps.y) * t };
+          }),
+        };
+      }),
+    };
+  }
+
   function multiDraw() {
-    if (!mState) {
-      mAnimId = requestAnimationFrame(multiDraw);
-      return;
-    }
+    const state = lerpState();
+    if (!state) { mAnimId = requestAnimationFrame(multiDraw); return; }
 
-    renderMultiState(mState);
+    renderMultiState(state);
 
-    if (mState.gameOver) {
+    if (mCurrState && mCurrState.gameOver) {
       mAnimId = null;
-      const w = mState.winner;
-      if (w === -1) {
-        gameoverTitle.textContent = 'TIE!';
-        gameoverMsg.textContent   = 'Both snakes died at the same time.';
-      } else if (w === myIndex) {
-        gameoverTitle.textContent = 'YOU WIN!';
-        gameoverMsg.textContent   = 'Nice work.';
-      } else {
-        gameoverTitle.textContent = 'YOU LOSE';
-        gameoverMsg.textContent   = 'Better luck next time.';
-      }
+      const w = mCurrState.winner;
+      if (w === -1)           { gameoverTitle.textContent = 'TIE!';      gameoverMsg.textContent = 'Both snakes died at the same time.'; }
+      else if (w === myIndex) { gameoverTitle.textContent = 'YOU WIN!';  gameoverMsg.textContent = 'Nice work.'; }
+      else                    { gameoverTitle.textContent = 'YOU LOSE';  gameoverMsg.textContent = 'Better luck next time.'; }
       waitMsg.classList.add('hidden');
       btnPlayAgain.onclick = multiRestart;
       showPanel('gameover');
       return;
     }
-
     mAnimId = requestAnimationFrame(multiDraw);
   }
 
@@ -732,9 +820,7 @@
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawGrid();
     drawFood(state.food);
-    state.snakes.forEach((snake, i) => {
-      drawSnake(snake.body, i, snake.dir, !snake.alive);
-    });
+    state.snakes.forEach((snake, i) => drawSnake(snake.body, i, snake.dir, !snake.alive));
   }
 
   function multiRestart() {
@@ -770,45 +856,82 @@
   }
 
   // ── input
-  function handleDir(d) {
-    if (mode === 'solo') {
-      if (!(d.x === -sDir.x && d.y === -sDir.y)) sNextDir = d;
-    } else if (mode === 'multi') {
-      if (ws && ws.readyState === 1) ws.send(JSON.stringify({ type: 'dir', dir: d }));
-    }
-  }
-
-  const KEY_MAP = {
-    ArrowUp:    { x: 0, y: -1 }, ArrowDown:  { x: 0, y:  1 },
-    ArrowLeft:  { x: -1, y: 0 }, ArrowRight: { x: 1, y:  0 },
-    w: { x: 0, y: -1 }, s: { x: 0, y:  1 },
-    a: { x: -1, y: 0 }, d: { x: 1, y:  0 },
+  const DPAD_MAP = { up:{x:0,y:-1}, down:{x:0,y:1}, left:{x:-1,y:0}, right:{x:1,y:0} };
+  const KEY_MAP  = {
+    ArrowUp:{x:0,y:-1}, ArrowDown:{x:0,y:1}, ArrowLeft:{x:-1,y:0}, ArrowRight:{x:1,y:0},
+    w:{x:0,y:-1}, s:{x:0,y:1}, a:{x:-1,y:0}, d:{x:1,y:0},
   };
 
+  function sendMultiDir(d) { if (ws && ws.readyState === 1) ws.send(JSON.stringify({ type: 'dir', dir: d })); }
+
+  // keyboard: hold left/right to steer in solo; tap for multi
   document.addEventListener('keydown', e => {
-    if (KEY_MAP[e.key]) { e.preventDefault(); handleDir(KEY_MAP[e.key]); }
+    if (mode === 'solo') {
+      if (e.key === 'ArrowLeft'  || e.key === 'a') { e.preventDefault(); sTurning = -1; }
+      if (e.key === 'ArrowRight' || e.key === 'd') { e.preventDefault(); sTurning =  1; }
+      if (e.key === 'ArrowUp'    || e.key === 'w') { e.preventDefault(); sTurning =  0; }
+      if (e.key === 'ArrowDown'  || e.key === 's') { e.preventDefault(); sTurning =  0; }
+    } else if (mode === 'multi') {
+      const d = KEY_MAP[e.key];
+      if (d) { e.preventDefault(); sendMultiDir(d); }
+    }
+  });
+  document.addEventListener('keyup', e => {
+    if (mode === 'solo' && ['ArrowLeft','a','ArrowRight','d'].includes(e.key)) sTurning = 0;
   });
 
-  const DPAD_MAP = { up: { x:0,y:-1 }, down: { x:0,y:1 }, left: { x:-1,y:0 }, right: { x:1,y:0 } };
+  // dpad: hold for solo steering, tap for multi direction
   document.querySelectorAll('.dpad-btn').forEach(el => {
-    el.addEventListener('touchstart', e => { e.preventDefault(); handleDir(DPAD_MAP[el.dataset.dir]); }, { passive: false });
-    el.addEventListener('mousedown',  () => handleDir(DPAD_MAP[el.dataset.dir]));
+    const dir = el.dataset.dir;
+    const soloStart = () => {
+      if (dir === 'left') sTurning = -1;
+      else if (dir === 'right') sTurning = 1;
+      else sTurning = 0;
+    };
+    const soloEnd = () => { if (dir === 'left' || dir === 'right') sTurning = 0; };
+    el.addEventListener('touchstart', e => {
+      e.preventDefault();
+      if (mode === 'solo') soloStart(); else sendMultiDir(DPAD_MAP[dir]);
+    }, { passive: false });
+    el.addEventListener('touchend',  () => { if (mode === 'solo') soloEnd(); });
+    el.addEventListener('mousedown', () => { if (mode === 'solo') soloStart(); else sendMultiDir(DPAD_MAP[dir]); });
+    el.addEventListener('mouseup',   () => { if (mode === 'solo') soloEnd(); });
   });
 
-  let swipeStart = null;
+  // canvas: hold left/right half for solo steering; swipe for multi
+  let swipeStart = null, soloTouchId = null;
   canvas.addEventListener('touchstart', e => {
-    const t = e.touches[0];
-    swipeStart = { x: t.clientX, y: t.clientY };
+    if (mode === 'solo') {
+      const touch = e.touches[0];
+      soloTouchId = touch.identifier;
+      const rect = canvas.getBoundingClientRect();
+      sTurning = (touch.clientX - rect.left) < rect.width / 2 ? -1 : 1;
+    } else {
+      swipeStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    }
+  }, { passive: true });
+  canvas.addEventListener('touchmove', e => {
+    if (mode === 'solo') {
+      const touch = Array.from(e.changedTouches).find(t => t.identifier === soloTouchId);
+      if (touch) {
+        const rect = canvas.getBoundingClientRect();
+        sTurning = (touch.clientX - rect.left) < rect.width / 2 ? -1 : 1;
+      }
+    }
   }, { passive: true });
   canvas.addEventListener('touchend', e => {
-    if (!swipeStart) return;
-    const t  = e.changedTouches[0];
-    const dx = t.clientX - swipeStart.x;
-    const dy = t.clientY - swipeStart.y;
-    swipeStart = null;
-    if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return;
-    if (Math.abs(dx) > Math.abs(dy)) handleDir(dx > 0 ? { x:1,y:0 } : { x:-1,y:0 });
-    else                              handleDir(dy > 0 ? { x:0,y:1 } : { x:0,y:-1 });
+    if (mode === 'solo') {
+      if (Array.from(e.changedTouches).some(t => t.identifier === soloTouchId)) {
+        sTurning = 0; soloTouchId = null;
+      }
+    } else {
+      if (!swipeStart) return;
+      const t = e.changedTouches[0];
+      const dx = t.clientX - swipeStart.x, dy = t.clientY - swipeStart.y;
+      swipeStart = null;
+      if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return;
+      sendMultiDir(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? {x:1,y:0} : {x:-1,y:0}) : (dy > 0 ? {x:0,y:1} : {x:0,y:-1}));
+    }
   }, { passive: true });
 
   // ── button wiring

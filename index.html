@@ -135,18 +135,36 @@
       border: 1px solid #334155;
     }
 
-    .btn-orange {
-      background: #fb923c;
-      color: #0f172a;
-      box-shadow: 0 0 20px #fb923c66;
-    }
-
     .hint-text {
       color: #475569;
       font-size: 0.75rem;
       text-align: center;
       max-width: 260px;
     }
+
+    .char-row { display: flex; gap: 10px; }
+    .char-card {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 10px; padding: 16px 12px; min-width: 80px;
+      background: #1e293b; border: 2px solid #334155; border-radius: 16px;
+      cursor: pointer; touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      transition: transform 0.1s;
+    }
+    .char-card:active { transform: scale(0.93); }
+    .char-card.selected { border-color: var(--cc); box-shadow: 0 0 14px var(--cc); }
+    .char-pip { width: 42px; height: 42px; border-radius: 50%; }
+    .char-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; color: #64748b; }
+    .char-card.selected .char-label { color: #e2e8f0; }
+
+    #btn-music {
+      background: none; border: none; cursor: pointer;
+      font-size: 1.1rem; padding: 4px 8px; border-radius: 8px;
+      color: #4ade80; touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent; line-height: 1;
+      margin-top: 2px;
+    }
+    #btn-music.muted { color: #334155; }
 
     #ws-input {
       padding: 10px 14px;
@@ -264,6 +282,7 @@
     <div class="score-box" id="score-right">
       <span class="score-label" id="label-right">BEST</span>
       <span class="score-value" id="val-right">0</span>
+      <button id="btn-music">&#9835;</button>
     </div>
   </header>
 
@@ -276,6 +295,26 @@
         <button id="btn-solo" class="btn btn-primary">SOLO</button>
         <button id="btn-multi" class="btn btn-secondary">2 PLAYER (WiFi)</button>
         <p class="hint-text">Hold left/right to steer &nbsp;|&nbsp; 2 Player needs <code>node server.js</code></p>
+      </div>
+
+      <div id="panel-chars" class="panel">
+        <h2 id="chars-title">CHOOSE</h2>
+        <div class="char-row">
+          <div class="char-card selected" data-char="snake" style="--cc:#4ade80">
+            <div class="char-pip" style="background:#4ade80;box-shadow:0 0 14px #4ade8099;"></div>
+            <span class="char-label">SNAKE</span>
+          </div>
+          <div class="char-card" data-char="dragon" style="--cc:#c084fc">
+            <div class="char-pip" style="background:#c084fc;box-shadow:0 0 14px #c084fc99;"></div>
+            <span class="char-label">DRAGON</span>
+          </div>
+          <div class="char-card" data-char="worm" style="--cc:#fb7185">
+            <div class="char-pip" style="background:#fb7185;box-shadow:0 0 14px #fb718599;"></div>
+            <span class="char-label">WORM</span>
+          </div>
+        </div>
+        <button id="btn-start-char" class="btn btn-primary">PLAY</button>
+        <button id="btn-chars-back" class="btn btn-secondary">BACK</button>
       </div>
 
       <div id="panel-connect" class="panel">
@@ -319,14 +358,60 @@
 <script>
 (() => {
   // ── constants
-  const S_SPEED  = 2.0;           // solo px/frame
-  const S_TURN   = Math.PI / 58;  // solo radians/frame
-  const S_WIDTH  = 14;            // solo snake px width
-  const S_INIT   = 100;           // solo initial trail length
-  const S_GROW   = 50;            // solo trail growth per food
-  const S_FOOD_R = 10;            // solo food radius px
-  const S_SKIP   = 25;            // solo self-collision skip frames
-  const M_TICK   = 150;           // must match server TICK_MS
+  const S_SPEED  = 2.0;
+  const S_TURN   = Math.PI / 58;
+  const S_INIT   = 100;
+  const S_GROW   = 50;
+  const S_FOOD_R = 10;
+  const M_TICK   = 150;
+
+  // ── characters
+  const CHARS = {
+    snake: {
+      color: '#4ade80', width: 14, skip: 25,
+      passes: [
+        { frac: 1.00, color: '#1a5c38', alpha: 0.55, blur: 0  },
+        { frac: 0.65, color: '#228b47', alpha: 0.75, blur: 4  },
+        { frac: 0.30, color: '#34c05a', alpha: 0.90, blur: 9  },
+        { frac: 0.08, color: '#4ade80', alpha: 1.0,  blur: 16 },
+      ],
+      eyeColor: '#0f172a', foodColor: '#f87171', foodGlow: '#f87171',
+    },
+    dragon: {
+      color: '#c084fc', width: 20, skip: 30,
+      passes: [
+        { frac: 1.00, color: '#3b0764', alpha: 0.55, blur: 0  },
+        { frac: 0.65, color: '#7e22ce', alpha: 0.75, blur: 5  },
+        { frac: 0.30, color: '#a855f7', alpha: 0.90, blur: 10 },
+        { frac: 0.08, color: '#e879f9', alpha: 1.0,  blur: 20 },
+      ],
+      eyeColor: '#fde68a', foodColor: '#fbbf24', foodGlow: '#fbbf24',
+    },
+    worm: {
+      color: '#fb7185', width: 17, skip: 22,
+      passes: null,
+      eyeColor: '#0f172a', foodColor: '#34d399', foodGlow: '#34d399',
+    },
+  };
+
+  // ── Starman-inspired chiptune
+  const MELODY = [
+    659.25, 783.99, 880.00,
+    659.25, 783.99, 932.33,
+    880.00, 659.25, 783.99, 880.00, 1046.50, 932.33,
+    880.00, 698.46, 783.99,
+    659.25, 622.25, 659.25,
+    523.25, 587.33, 493.88,
+  ];
+  const NOTE_DUR = [
+    0.5, 0.5, 1,
+    0.5, 0.5, 1,
+    0.5, 0.5, 0.5, 0.5, 1, 1,
+    0.5, 0.5, 1,
+    0.5, 0.5, 1,
+    0.5, 0.5, 1,
+  ];
+  const BPM = 200;
 
   // ── dom refs
   const canvas        = document.getElementById('canvas');
@@ -335,7 +420,7 @@
   const labelLeft     = document.getElementById('label-left');
   const labelRight    = document.getElementById('label-right');
   const valLeft       = document.getElementById('val-left');
-  const valRight      = document.getElementById('val-right');
+  const valRight      = document.getElementById('v-right') || document.getElementById('val-right');
   const wsInput       = document.getElementById('ws-input');
   const connectStatus = document.getElementById('connect-status');
   const countdownNum  = document.getElementById('countdown-num');
@@ -344,25 +429,34 @@
   const waitMsg       = document.getElementById('wait-msg');
   const btnPlayAgain  = document.getElementById('btn-play-again');
   const btnMenu       = document.getElementById('btn-menu');
+  const btnMusic      = document.getElementById('btn-music');
+  const charsTitle    = document.getElementById('chars-title');
+
+  const valRightEl    = document.getElementById('val-right');
 
   const wsMeta    = document.querySelector('meta[name="ws-url"]');
   const autoWsUrl = wsMeta ? wsMeta.content : null;
 
   // ── state
-  let mode    = 'menu';
-  let myIndex = 0;
-  let ws      = null;
-  let cellSz  = 16;
+  let mode         = 'menu';
+  let myIndex      = 0;
+  let ws           = null;
+  let cellSz       = 16;
+  let selectedChar = 'snake';
 
-  // solo – free movement
+  // solo
   let sTrail, sBodyLen, sTurning, sAngle, sFood, sScore, sBest, sRunning, sAnimId;
-  // multi – interpolated rendering
+  // multi
   let mPrevState = null, mPrevTime = 0;
   let mCurrState = null, mCurrTime = 0;
   let mCols = 25, mRows = 40, mAnimId = null;
+  // music
+  let audioCtx = null, gainNode = null;
+  let musicMuted = false, musicPlaying = false;
+  let musicScheduleId = null, noteIdx = 0, nextNoteTime = 0;
 
   // ── panel control
-  const PANELS = ['menu', 'connect', 'waiting', 'countdown', 'gameover'];
+  const PANELS = ['menu', 'chars', 'connect', 'waiting', 'countdown', 'gameover'];
 
   function showPanel(name) {
     overlay.classList.remove('hidden');
@@ -399,7 +493,7 @@
     labelLeft.textContent  = 'SCORE';
     labelRight.textContent = 'BEST';
     valLeft.textContent    = sScore || 0;
-    valRight.textContent   = sBest  || 0;
+    valRightEl.textContent = sBest  || 0;
   }
 
   function setScoreHeaderMulti() {
@@ -414,29 +508,23 @@
       labelLeft.style.color  = '#4ade80';
       labelRight.style.color = '#fb923c';
     }
-    valLeft.textContent  = 0;
-    valRight.textContent = 0;
+    valLeft.textContent    = 0;
+    valRightEl.textContent = 0;
   }
 
   function updateMultiScore(state) {
     if (!state || !state.snakes) return;
     const s0 = state.snakes[0] ? state.snakes[0].score : 0;
     const s1 = state.snakes[1] ? state.snakes[1].score : 0;
-    if (myIndex === 0) {
-      valLeft.textContent  = s0;
-      valRight.textContent = s1;
-    } else {
-      valLeft.textContent  = s1;
-      valRight.textContent = s0;
-    }
+    if (myIndex === 0) { valLeft.textContent = s0; valRightEl.textContent = s1; }
+    else               { valLeft.textContent = s1; valRightEl.textContent = s0; }
   }
 
-  // ── drawing helpers
+  // ── multi drawing helpers
   function roundRect(c, x, y, w, h, r) {
     r = Math.min(r, w / 2, h / 2);
     c.beginPath();
-    c.moveTo(x + r, y);
-    c.lineTo(x + w - r, y);
+    c.moveTo(x + r, y); c.lineTo(x + w - r, y);
     c.quadraticCurveTo(x + w, y, x + w, y + r);
     c.lineTo(x + w, y + h - r);
     c.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
@@ -459,22 +547,17 @@
     ctx.fillStyle = '#1e293b';
     const cols = Math.ceil(canvas.width  / cellSz);
     const rows = Math.ceil(canvas.height / cellSz);
-    for (let x = 0; x < cols; x++) {
-      for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < cols; x++)
+      for (let y = 0; y < rows; y++)
         ctx.fillRect(x * cellSz + cellSz / 2 - 1, y * cellSz + cellSz / 2 - 1, 2, 2);
-      }
-    }
   }
 
   function drawFood(food) {
     if (!food) return;
     const c = cellSz;
-    const t = Date.now() / 600;
-    const pulse = 0.6 + 0.4 * Math.sin(t * Math.PI * 2);
+    const pulse = 0.6 + 0.4 * Math.sin(Date.now() / 600 * Math.PI * 2);
     ctx.save();
-    ctx.shadowBlur  = 16 * pulse;
-    ctx.shadowColor = '#f87171';
-    ctx.fillStyle   = '#f87171';
+    ctx.shadowBlur = 16 * pulse; ctx.shadowColor = '#f87171'; ctx.fillStyle = '#f87171';
     const r = c * 0.35;
     roundRect(ctx, food.x * c + c / 2 - r, food.y * c + c / 2 - r, r * 2, r * 2, r * 0.5);
     ctx.fill();
@@ -483,49 +566,35 @@
 
   function drawSnake(body, colorIdx, dir, dead) {
     if (!body || body.length === 0) return;
-    const c       = cellSz;
+    const c = cellSz;
     const baseClr = colorIdx === 0 ? '#4ade80' : '#fb923c';
-    const glowClr = baseClr;
-
     ctx.save();
     if (dead) ctx.globalAlpha = 0.3;
-
     body.forEach((seg, i) => {
       const progress = 1 - i / body.length;
       const pad = i === 0 ? 1 : 2;
       ctx.save();
-      if (i === 0 && !dead) {
-        ctx.shadowBlur  = 14;
-        ctx.shadowColor = glowClr;
-      }
+      if (i === 0 && !dead) { ctx.shadowBlur = 14; ctx.shadowColor = baseClr; }
       ctx.globalAlpha = (dead ? 0.3 : 1) * (0.4 + 0.6 * progress);
-      if (colorIdx === 0) {
-        ctx.fillStyle = i === 0 ? '#4ade80' : `hsl(142,70%,${45 + progress * 15}%)`;
-      } else {
-        ctx.fillStyle = i === 0 ? '#fb923c' : `hsl(25,95%,${48 + progress * 14}%)`;
-      }
+      ctx.fillStyle = colorIdx === 0
+        ? (i === 0 ? '#4ade80' : `hsl(142,70%,${45 + progress * 15}%)`)
+        : (i === 0 ? '#fb923c' : `hsl(25,95%,${48 + progress * 14}%)`);
       roundRect(ctx, seg.x * c + pad, seg.y * c + pad, c - pad * 2, c - pad * 2, c * 0.25);
       ctx.fill();
       ctx.restore();
-
       if (i === 0) {
-        ctx.save();
-        ctx.fillStyle  = '#0f172a';
+        ctx.save(); ctx.fillStyle = '#0f172a';
         const ew = Math.max(2, c * 0.1);
-        const d  = dir || { x: 1, y: 0 };
-        eyePositions(d, c).forEach(([ex, ey]) => {
-          ctx.beginPath();
-          ctx.arc(seg.x * c + ex, seg.y * c + ey, ew, 0, Math.PI * 2);
-          ctx.fill();
+        eyePositions(dir || { x:1, y:0 }, c).forEach(([ex, ey]) => {
+          ctx.beginPath(); ctx.arc(seg.x * c + ex, seg.y * c + ey, ew, 0, Math.PI * 2); ctx.fill();
         });
         ctx.restore();
       }
     });
-
     ctx.restore();
   }
 
-  // ── solo drawing (free-movement)
+  // ── solo drawing
   function drawFreeGrid() {
     ctx.fillStyle = '#1e293b';
     const sp = 28;
@@ -536,70 +605,88 @@
 
   function drawFreeFood(food) {
     if (!food) return;
+    const ch = CHARS[selectedChar];
     const pulse = 0.6 + 0.4 * Math.sin(Date.now() / 600 * Math.PI * 2);
     ctx.save();
-    ctx.shadowBlur = 18 * pulse; ctx.shadowColor = '#f87171';
-    ctx.fillStyle  = '#f87171';
-    ctx.beginPath();
-    ctx.arc(food.x, food.y, S_FOOD_R, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.shadowBlur = 18 * pulse; ctx.shadowColor = ch.foodGlow; ctx.fillStyle = ch.foodColor;
+    ctx.beginPath(); ctx.arc(food.x, food.y, S_FOOD_R, 0, Math.PI * 2); ctx.fill();
     ctx.restore();
   }
 
-  function drawFreeSnake(pts, angle) {
-    if (pts.length < 2) return;
-    ctx.save();
-    ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.lineWidth = S_WIDTH;
-
-    // 4-pass fade from tail (dark) → head (bright)
-    const passes = [
-      { end: pts.length,                           color: '#1a5c38', alpha: 0.55, blur: 0  },
-      { end: Math.floor(pts.length * 0.65) | 0,    color: '#228b47', alpha: 0.75, blur: 4  },
-      { end: Math.floor(pts.length * 0.30) | 0,    color: '#34c05a', alpha: 0.90, blur: 9  },
-      { end: Math.max(2, pts.length * 0.08 | 0),   color: '#4ade80', alpha: 1.0,  blur: 16 },
-    ];
+  function drawStrokePasses(pts, ch, passes) {
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.lineWidth = ch.width;
     for (const p of passes) {
-      const end = Math.min(p.end, pts.length);
+      const end = Math.min(Math.ceil(pts.length * p.frac), pts.length);
       if (end < 2) continue;
       ctx.globalAlpha = p.alpha; ctx.shadowBlur = p.blur;
-      ctx.shadowColor = '#4ade80'; ctx.strokeStyle = p.color;
+      ctx.shadowColor = ch.color; ctx.strokeStyle = p.color;
       ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y);
       for (let i = 1; i < end; i++) ctx.lineTo(pts[i].x, pts[i].y);
       ctx.stroke();
     }
+  }
 
-    // eyes
-    ctx.globalAlpha = 1; ctx.shadowBlur = 0; ctx.fillStyle = '#0f172a';
-    const ew  = Math.max(2, S_WIDTH * 0.18);
-    const eD  = S_WIDTH * 0.30;
+  function drawEyes(pts, angle, ch) {
+    ctx.globalAlpha = 1; ctx.shadowBlur = 0; ctx.fillStyle = ch.eyeColor;
+    const ew = Math.max(2, ch.width * 0.18), eD = ch.width * 0.30;
     const cos = Math.cos(angle), sin = Math.sin(angle);
     [-1, 1].forEach(side => {
       ctx.beginPath();
-      ctx.arc(
-        pts[0].x + cos * S_WIDTH * 0.1 + (-sin) * eD * side,
-        pts[0].y + sin * S_WIDTH * 0.1 + ( cos) * eD * side,
-        ew, 0, Math.PI * 2
-      );
+      ctx.arc(pts[0].x + cos * ch.width * 0.1 + (-sin) * eD * side,
+              pts[0].y + sin * ch.width * 0.1 + ( cos) * eD * side, ew, 0, Math.PI * 2);
       ctx.fill();
     });
+  }
+
+  function drawWorm(pts, angle, ch) {
+    if (pts.length < 2) return;
+    ctx.save();
+    drawStrokePasses(pts, ch, [
+      { frac: 1.00, color: '#881337', alpha: 0.55, blur: 0  },
+      { frac: 0.65, color: '#be185d', alpha: 0.75, blur: 4  },
+      { frac: 0.30, color: '#f43f5e', alpha: 0.90, blur: 9  },
+      { frac: 0.08, color: '#fb7185', alpha: 1.0,  blur: 16 },
+    ]);
+    // segmentation rings
+    ctx.globalAlpha = 0.40; ctx.shadowBlur = 0;
+    ctx.strokeStyle = '#881337'; ctx.lineWidth = 2;
+    let dist = 0;
+    for (let i = 1; i < pts.length; i++) {
+      const dx = pts[i].x - pts[i-1].x, dy = pts[i].y - pts[i-1].y;
+      dist += Math.sqrt(dx*dx + dy*dy);
+      if (dist >= 20) {
+        dist -= 20;
+        ctx.beginPath(); ctx.arc(pts[i].x, pts[i].y, ch.width / 2 - 1, 0, Math.PI * 2); ctx.stroke();
+      }
+    }
+    drawEyes(pts, angle, ch);
     ctx.restore();
   }
 
-  // ── solo game (free movement + turning radius)
+  function drawFreeSnake(pts, angle) {
+    const ch = CHARS[selectedChar];
+    if (!ch.passes) { drawWorm(pts, angle, ch); return; }
+    if (pts.length < 2) return;
+    ctx.save();
+    drawStrokePasses(pts, ch, ch.passes);
+    drawEyes(pts, angle, ch);
+    ctx.restore();
+  }
+
+  // ── solo game
   function soloInit() {
+    const ch = CHARS[selectedChar];
     const W = canvas.width, H = canvas.height;
-    sAngle   = 0;
-    sTurning = 0;
-    sBodyLen = S_INIT;
-    sTrail   = [];
+    sAngle = 0; sTurning = 0; sBodyLen = S_INIT; sTrail = [];
     for (let i = 0; i < S_INIT; i++) sTrail.push({ x: W / 2 - i * S_SPEED, y: H / 2 });
-    sScore   = 0;
+    sScore = 0;
     spawnSoloFood();
     setScoreHeaderSolo();
   }
 
   function spawnSoloFood() {
-    const m = S_FOOD_R + S_WIDTH;
+    const ch = CHARS[selectedChar];
+    const m = S_FOOD_R + ch.width;
     sFood = {
       x: m + Math.random() * (canvas.width  - m * 2),
       y: m + Math.random() * (canvas.height - m * 2),
@@ -609,51 +696,40 @@
   function soloFrame() {
     if (!sRunning) return;
     sAnimId = requestAnimationFrame(soloFrame);
-
+    const ch = CHARS[selectedChar];
     sAngle += sTurning * S_TURN;
-
     const nx = sTrail[0].x + Math.cos(sAngle) * S_SPEED;
     const ny = sTrail[0].y + Math.sin(sAngle) * S_SPEED;
-
-    // wall
-    const wall = S_WIDTH / 2;
+    const wall = ch.width / 2;
     if (nx < wall || nx > canvas.width - wall || ny < wall || ny > canvas.height - wall) return soloOver();
-
-    // self
-    const r2 = (S_WIDTH / 2) ** 2;
-    for (let i = S_SKIP; i < sTrail.length; i++) {
+    const r2 = (ch.width / 2) ** 2;
+    for (let i = ch.skip; i < sTrail.length; i++) {
       const dx = nx - sTrail[i].x, dy = ny - sTrail[i].y;
       if (dx * dx + dy * dy < r2) return soloOver();
     }
-
-    // food
     const fdx = nx - sFood.x, fdy = ny - sFood.y;
-    const ate = fdx * fdx + fdy * fdy < (S_FOOD_R + S_WIDTH / 2) ** 2;
-
+    const ate = fdx * fdx + fdy * fdy < (S_FOOD_R + ch.width / 2) ** 2;
     sTrail.unshift({ x: nx, y: ny });
     if (!ate) {
       while (sTrail.length > sBodyLen) sTrail.pop();
     } else {
-      sScore++;
-      sBodyLen += S_GROW;
+      sScore++; sBodyLen += S_GROW;
       valLeft.textContent = sScore;
-      if (sScore > sBest) { sBest = sScore; valRight.textContent = sBest; localStorage.setItem('snake_best', sBest); }
+      if (sScore > sBest) { sBest = sScore; valRightEl.textContent = sBest; localStorage.setItem('snake_best', sBest); }
       spawnSoloFood();
     }
-
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawFreeGrid();
-    drawFreeFood(sFood);
-    drawFreeSnake(sTrail.slice(0, sBodyLen), sAngle);
+    drawFreeGrid(); drawFreeFood(sFood); drawFreeSnake(sTrail.slice(0, sBodyLen), sAngle);
   }
 
   function soloOver() {
     sRunning = false;
     cancelAnimationFrame(sAnimId);
+    stopMusic();
     gameoverTitle.textContent = 'GAME OVER';
     gameoverMsg.textContent   = 'Score: ' + sScore;
     waitMsg.classList.add('hidden');
-    btnPlayAgain.onclick = startSolo;
+    btnPlayAgain.onclick = () => showPanel('chars');
     showPanel('gameover');
   }
 
@@ -661,11 +737,66 @@
     mode = 'solo';
     sRunning = false;
     if (sAnimId) cancelAnimationFrame(sAnimId);
-    resize();
-    soloInit();
-    hideOverlay();
+    resize(); soloInit(); hideOverlay();
     sRunning = true;
     sAnimId  = requestAnimationFrame(soloFrame);
+    startMusic();
+  }
+
+  // ── music (Web Audio API)
+  function ensureAudio() {
+    if (audioCtx) return;
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    gainNode = audioCtx.createGain();
+    gainNode.gain.value = 0.12;
+    gainNode.connect(audioCtx.destination);
+  }
+
+  function scheduleNote(freq, startTime, dur) {
+    const osc = audioCtx.createOscillator();
+    const env = audioCtx.createGain();
+    osc.type = 'square';
+    osc.frequency.value = freq;
+    env.gain.setValueAtTime(0.8, startTime);
+    env.gain.exponentialRampToValueAtTime(0.001, startTime + dur * 0.85);
+    osc.connect(env); env.connect(gainNode);
+    osc.start(startTime); osc.stop(startTime + dur);
+  }
+
+  function scheduleMusicAhead() {
+    if (!audioCtx || !musicPlaying) return;
+    const beat = 60 / BPM;
+    while (nextNoteTime < audioCtx.currentTime + 0.2) {
+      scheduleNote(MELODY[noteIdx], nextNoteTime, beat * NOTE_DUR[noteIdx] * 0.9);
+      nextNoteTime += beat * NOTE_DUR[noteIdx];
+      noteIdx = (noteIdx + 1) % MELODY.length;
+    }
+    musicScheduleId = setTimeout(scheduleMusicAhead, 80);
+  }
+
+  function startMusic() {
+    if (musicMuted) return;
+    ensureAudio();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    musicPlaying = true; noteIdx = 0;
+    nextNoteTime = audioCtx.currentTime + 0.05;
+    scheduleMusicAhead();
+  }
+
+  function stopMusic() {
+    musicPlaying = false;
+    if (musicScheduleId) { clearTimeout(musicScheduleId); musicScheduleId = null; }
+  }
+
+  function toggleMusic() {
+    musicMuted = !musicMuted;
+    btnMusic.classList.toggle('muted', musicMuted);
+    localStorage.setItem('snake_music_muted', musicMuted ? '1' : '0');
+    if (musicMuted) {
+      stopMusic();
+    } else if (mode === 'solo' && sRunning) {
+      startMusic();
+    }
   }
 
   // ── multi game
@@ -674,29 +805,16 @@
     let wsUrl = url.trim();
     if (!wsUrl.startsWith('ws://') && !wsUrl.startsWith('wss://')) wsUrl = 'ws://' + wsUrl;
     connectStatus.textContent = 'Connecting...';
-
     if (ws) { try { ws.close(); } catch(_) {} ws = null; }
-
-    try {
-      ws = new WebSocket(wsUrl);
-    } catch(e) {
-      connectStatus.textContent = 'Invalid address.';
-      return;
-    }
-
+    try { ws = new WebSocket(wsUrl); } catch(e) { connectStatus.textContent = 'Invalid address.'; return; }
     ws.onopen = () => { connectStatus.textContent = ''; };
-
     ws.onmessage = (e) => {
-      let msg;
-      try { msg = JSON.parse(e.data); } catch { return; }
+      let msg; try { msg = JSON.parse(e.data); } catch { return; }
       handleServerMsg(msg);
     };
-
     ws.onerror = () => {
-      if (autoWsUrl) { showPanel('menu'); }
-      else { connectStatus.textContent = 'Connection failed.'; }
+      if (autoWsUrl) showPanel('menu'); else connectStatus.textContent = 'Connection failed.';
     };
-
     ws.onclose = () => {
       if (mode === 'multi') {
         stopMultiLoop();
@@ -712,52 +830,25 @@
   function handleServerMsg(msg) {
     switch (msg.type) {
       case 'joined':
-        myIndex = msg.idx;
-        mCols   = msg.cols;
-        mRows   = msg.rows;
-        mode    = 'multi';
-        resize();
-        setScoreHeaderMulti();
-        showPanel('waiting');
-        break;
-
-      case 'waiting':
-        showPanel('waiting');
-        break;
-
+        myIndex = msg.idx; mCols = msg.cols; mRows = msg.rows;
+        mode = 'multi'; resize(); setScoreHeaderMulti(); showPanel('waiting'); break;
+      case 'waiting': showPanel('waiting'); break;
       case 'countdown':
         showPanel('countdown');
-        countdownNum.classList.remove('pop');
-        void countdownNum.offsetWidth;
-        countdownNum.textContent = msg.n;
-        countdownNum.classList.add('pop');
-        break;
-
+        countdownNum.classList.remove('pop'); void countdownNum.offsetWidth;
+        countdownNum.textContent = msg.n; countdownNum.classList.add('pop'); break;
       case 'go':
-        mPrevState = null; mCurrState = null;
-        hideOverlay();
+        mPrevState = null; mCurrState = null; hideOverlay();
         if (mAnimId) cancelAnimationFrame(mAnimId);
-        mAnimId = requestAnimationFrame(multiDraw);
-        break;
-
+        mAnimId = requestAnimationFrame(multiDraw); break;
       case 'state':
-        mPrevState = mCurrState;
-        mPrevTime  = mCurrTime || (Date.now() - M_TICK);
-        mCurrState = msg.state;
-        mCurrTime  = Date.now();
-        updateMultiScore(mCurrState);
-        break;
-
-      case 'waitRestart':
-        waitMsg.classList.remove('hidden');
-        break;
-
+        mPrevState = mCurrState; mPrevTime = mCurrTime || (Date.now() - M_TICK);
+        mCurrState = msg.state; mCurrTime = Date.now();
+        updateMultiScore(mCurrState); break;
+      case 'waitRestart': waitMsg.classList.remove('hidden'); break;
       case 'full':
-        if (autoWsUrl) { showPanel('menu'); }
-        else { connectStatus.textContent = 'Room is full. Try again later.'; }
-        ws = null;
-        break;
-
+        if (autoWsUrl) showPanel('menu'); else connectStatus.textContent = 'Room is full.';
+        ws = null; break;
       case 'left':
         if (mode === 'multi') {
           stopMultiLoop();
@@ -766,8 +857,7 @@
           waitMsg.classList.add('hidden');
           btnPlayAgain.onclick = () => goMultiConnect();
           showPanel('gameover');
-        }
-        break;
+        } break;
     }
   }
 
@@ -799,28 +889,20 @@
   function multiDraw() {
     const state = lerpState();
     if (!state) { mAnimId = requestAnimationFrame(multiDraw); return; }
-
-    renderMultiState(state);
-
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawGrid(); drawFood(state.food);
+    state.snakes.forEach((snake, i) => drawSnake(snake.body, i, snake.dir, !snake.alive));
     if (mCurrState && mCurrState.gameOver) {
       mAnimId = null;
       const w = mCurrState.winner;
-      if (w === -1)           { gameoverTitle.textContent = 'TIE!';      gameoverMsg.textContent = 'Both snakes died at the same time.'; }
-      else if (w === myIndex) { gameoverTitle.textContent = 'YOU WIN!';  gameoverMsg.textContent = 'Nice work.'; }
-      else                    { gameoverTitle.textContent = 'YOU LOSE';  gameoverMsg.textContent = 'Better luck next time.'; }
+      if (w === -1)           { gameoverTitle.textContent = 'TIE!';     gameoverMsg.textContent = 'Both snakes died.'; }
+      else if (w === myIndex) { gameoverTitle.textContent = 'YOU WIN!'; gameoverMsg.textContent = 'Nice work.'; }
+      else                    { gameoverTitle.textContent = 'YOU LOSE'; gameoverMsg.textContent = 'Better luck next time.'; }
       waitMsg.classList.add('hidden');
       btnPlayAgain.onclick = multiRestart;
-      showPanel('gameover');
-      return;
+      showPanel('gameover'); return;
     }
     mAnimId = requestAnimationFrame(multiDraw);
-  }
-
-  function renderMultiState(state) {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawGrid();
-    drawFood(state.food);
-    state.snakes.forEach((snake, i) => drawSnake(snake.body, i, snake.dir, !snake.alive));
   }
 
   function multiRestart() {
@@ -834,25 +916,30 @@
   function goMultiConnect() {
     if (ws) { try { ws.close(); } catch(_) {} ws = null; }
     connectStatus.textContent = '';
-    if (autoWsUrl) {
-      showPanel('waiting');
-      connectToServer(autoWsUrl);
-    } else {
-      mode = 'menu';
-      showPanel('connect');
-    }
+    if (autoWsUrl) { showPanel('waiting'); connectToServer(autoWsUrl); }
+    else { mode = 'menu'; showPanel('connect'); }
   }
 
   function goMenu() {
-    sRunning = false;
-    cancelAnimationFrame(sAnimId);
-    stopMultiLoop();
+    sRunning = false; cancelAnimationFrame(sAnimId);
+    stopMultiLoop(); stopMusic();
     if (ws) { try { ws.close(); } catch(_) {} ws = null; }
-    mode = 'menu';
-    setScoreHeaderSolo();
-    valLeft.textContent  = sScore || 0;
-    valRight.textContent = sBest  || 0;
+    mode = 'menu'; setScoreHeaderSolo();
+    valLeft.textContent = sScore || 0; valRightEl.textContent = sBest || 0;
     showPanel('menu');
+  }
+
+  // ── character selection
+  function selectChar(id) {
+    selectedChar = id;
+    localStorage.setItem('snake_char', id);
+    document.querySelectorAll('.char-card').forEach(el => {
+      el.classList.toggle('selected', el.dataset.char === id);
+    });
+    if (charsTitle) {
+      charsTitle.style.color = CHARS[id].color;
+      charsTitle.style.textShadow = `0 0 24px ${CHARS[id].color}66`;
+    }
   }
 
   // ── input
@@ -864,7 +951,6 @@
 
   function sendMultiDir(d) { if (ws && ws.readyState === 1) ws.send(JSON.stringify({ type: 'dir', dir: d })); }
 
-  // keyboard: hold left/right to steer in solo; tap for multi
   document.addEventListener('keydown', e => {
     if (mode === 'solo') {
       if (e.key === 'ArrowLeft'  || e.key === 'a') { e.preventDefault(); sTurning = -1; }
@@ -872,58 +958,40 @@
       if (e.key === 'ArrowUp'    || e.key === 'w') { e.preventDefault(); sTurning =  0; }
       if (e.key === 'ArrowDown'  || e.key === 's') { e.preventDefault(); sTurning =  0; }
     } else if (mode === 'multi') {
-      const d = KEY_MAP[e.key];
-      if (d) { e.preventDefault(); sendMultiDir(d); }
+      const d = KEY_MAP[e.key]; if (d) { e.preventDefault(); sendMultiDir(d); }
     }
   });
   document.addEventListener('keyup', e => {
     if (mode === 'solo' && ['ArrowLeft','a','ArrowRight','d'].includes(e.key)) sTurning = 0;
   });
 
-  // dpad: hold for solo steering, tap for multi direction
   document.querySelectorAll('.dpad-btn').forEach(el => {
     const dir = el.dataset.dir;
-    const soloStart = () => {
-      if (dir === 'left') sTurning = -1;
-      else if (dir === 'right') sTurning = 1;
-      else sTurning = 0;
-    };
-    const soloEnd = () => { if (dir === 'left' || dir === 'right') sTurning = 0; };
-    el.addEventListener('touchstart', e => {
-      e.preventDefault();
-      if (mode === 'solo') soloStart(); else sendMultiDir(DPAD_MAP[dir]);
-    }, { passive: false });
+    const soloStart = () => { sTurning = dir === 'left' ? -1 : dir === 'right' ? 1 : 0; };
+    const soloEnd   = () => { if (dir === 'left' || dir === 'right') sTurning = 0; };
+    el.addEventListener('touchstart', e => { e.preventDefault(); if (mode === 'solo') soloStart(); else sendMultiDir(DPAD_MAP[dir]); }, { passive: false });
     el.addEventListener('touchend',  () => { if (mode === 'solo') soloEnd(); });
     el.addEventListener('mousedown', () => { if (mode === 'solo') soloStart(); else sendMultiDir(DPAD_MAP[dir]); });
     el.addEventListener('mouseup',   () => { if (mode === 'solo') soloEnd(); });
   });
 
-  // canvas: hold left/right half for solo steering; swipe for multi
   let swipeStart = null, soloTouchId = null;
   canvas.addEventListener('touchstart', e => {
     if (mode === 'solo') {
-      const touch = e.touches[0];
-      soloTouchId = touch.identifier;
+      const touch = e.touches[0]; soloTouchId = touch.identifier;
       const rect = canvas.getBoundingClientRect();
       sTurning = (touch.clientX - rect.left) < rect.width / 2 ? -1 : 1;
-    } else {
-      swipeStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-    }
+    } else { swipeStart = { x: e.touches[0].clientX, y: e.touches[0].clientY }; }
   }, { passive: true });
   canvas.addEventListener('touchmove', e => {
     if (mode === 'solo') {
       const touch = Array.from(e.changedTouches).find(t => t.identifier === soloTouchId);
-      if (touch) {
-        const rect = canvas.getBoundingClientRect();
-        sTurning = (touch.clientX - rect.left) < rect.width / 2 ? -1 : 1;
-      }
+      if (touch) { const rect = canvas.getBoundingClientRect(); sTurning = (touch.clientX - rect.left) < rect.width / 2 ? -1 : 1; }
     }
   }, { passive: true });
   canvas.addEventListener('touchend', e => {
     if (mode === 'solo') {
-      if (Array.from(e.changedTouches).some(t => t.identifier === soloTouchId)) {
-        sTurning = 0; soloTouchId = null;
-      }
+      if (Array.from(e.changedTouches).some(t => t.identifier === soloTouchId)) { sTurning = 0; soloTouchId = null; }
     } else {
       if (!swipeStart) return;
       const t = e.changedTouches[0];
@@ -935,29 +1003,36 @@
   }, { passive: true });
 
   // ── button wiring
-  document.getElementById('btn-solo').addEventListener('click', startSolo);
+  document.getElementById('btn-solo').addEventListener('click', () => showPanel('chars'));
 
+  document.querySelectorAll('.char-card').forEach(el => {
+    el.addEventListener('click', () => selectChar(el.dataset.char));
+    el.addEventListener('touchend', e => { e.preventDefault(); selectChar(el.dataset.char); });
+  });
+
+  document.getElementById('btn-start-char').addEventListener('click', startSolo);
+  document.getElementById('btn-chars-back').addEventListener('click', () => showPanel('menu'));
   document.getElementById('btn-multi').addEventListener('click', goMultiConnect);
-
   document.getElementById('btn-connect').addEventListener('click', () => connectToServer(wsInput.value));
-
   wsInput.addEventListener('keydown', e => { if (e.key === 'Enter') connectToServer(wsInput.value); });
-
   document.getElementById('btn-back').addEventListener('click', () => {
     if (ws) { try { ws.close(); } catch(_) {} ws = null; }
     showPanel('menu');
   });
-
   btnMenu.addEventListener('click', goMenu);
-
+  btnMusic.addEventListener('click', toggleMusic);
   window.addEventListener('resize', resize);
 
   // ── boot
   sBest = parseInt(localStorage.getItem('snake_best') || '0');
   sScore = 0;
+  selectedChar = localStorage.getItem('snake_char') || 'snake';
+  musicMuted   = localStorage.getItem('snake_music_muted') === '1';
+  btnMusic.classList.toggle('muted', musicMuted);
+  selectChar(selectedChar);
   resize();
   setScoreHeaderSolo();
-  valRight.textContent = sBest;
+  valRightEl.textContent = sBest;
   showPanel('menu');
 })();
 </script>

@@ -288,8 +288,8 @@
       </div>
 
       <div id="panel-waiting" class="panel">
-        <h2>READY!</h2>
-        <p>Waiting for Player 2...</p>
+        <h2>SEARCHING</h2>
+        <p>Looking for another player...</p>
         <div class="spinner"></div>
       </div>
 
@@ -619,7 +619,10 @@
       handleServerMsg(msg);
     };
 
-    ws.onerror = () => { connectStatus.textContent = 'Connection failed.'; };
+    ws.onerror = () => {
+      if (autoWsUrl) { showPanel('menu'); }
+      else { connectStatus.textContent = 'Connection failed.'; }
+    };
 
     ws.onclose = () => {
       if (mode === 'multi') {
@@ -673,7 +676,8 @@
         break;
 
       case 'full':
-        connectStatus.textContent = 'Room is full. Try again later.';
+        if (autoWsUrl) { showPanel('menu'); }
+        else { connectStatus.textContent = 'Room is full. Try again later.'; }
         ws = null;
         break;
 
@@ -743,13 +747,14 @@
   // ── navigation
   function goMultiConnect() {
     if (ws) { try { ws.close(); } catch(_) {} ws = null; }
-    mode = 'menu';
     connectStatus.textContent = '';
     if (autoWsUrl) {
-      const bare = autoWsUrl.replace(/^wss?:\/\//, '');
-      wsInput.value = bare;
+      showPanel('waiting');
+      connectToServer(autoWsUrl);
+    } else {
+      mode = 'menu';
+      showPanel('connect');
     }
-    showPanel('connect');
   }
 
   function goMenu() {

@@ -1,0 +1,7 @@
+{
+  "name": "arena-fps",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "npx --yes http-server . -p 8080 -c-1 --cors -o"
+  }
+}

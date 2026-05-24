@@ -413,7 +413,29 @@ const SHOP_GROUPS = [
   },
 ];
 
-let shopReloadMult = 1.0; // tracks reload speed upgrade
+// Per-gun upgrade groups — rendered only when that gun is owned
+const GUN_MOD_GROUPS = {
+  1: {
+    label: 'PLASMA MODS',
+    color: '#ff5500',
+    items: [
+      { id:'plasma_dmg',  name:'OVERCHARGE',    desc:'+15 plasma DMG',           cost:250, maxBuys:4 },
+      { id:'plasma_rate', name:'CAPACITOR',     desc:'20% faster plasma fire',   cost:300, maxBuys:3 },
+      { id:'plasma_clip', name:'CELL EXPANDER', desc:'+2 plasma cell capacity',  cost:200, maxBuys:4 },
+    ],
+  },
+  2: {
+    label: 'SHOTGUN MODS',
+    color: '#cc8800',
+    items: [
+      { id:'shotgun_dmg',     name:'SLUG ROUNDS',  desc:'+5 DMG per pellet',     cost:225, maxBuys:4 },
+      { id:'shotgun_pellets', name:'WIDE CHOKE',   desc:'+1 extra pellet',       cost:350, maxBuys:3 },
+      { id:'shotgun_clip',    name:'TUBE EXTEND',  desc:'+2 shell capacity',     cost:200, maxBuys:3 },
+    ],
+  },
+};
+
+let shopReloadMult = 1.0;
 
 function applyUpgrade(id) {
   if (id === 'health')   { player.hp = Math.min(maxHp, player.hp + 50); refreshHealthHUD(); }
@@ -426,6 +448,12 @@ function applyUpgrade(id) {
   if (id === 'reload')     { shopReloadMult *= 0.75; }
   if (id === 'gun_plasma')  { ownedGuns.add(1); }
   if (id === 'gun_shotgun') { ownedGuns.add(2); }
+  if (id === 'plasma_dmg')      { PLASMA_DMG += 15; }
+  if (id === 'plasma_rate')     { PLASMA_RATE = Math.max(0.20, PLASMA_RATE * 0.80); }
+  if (id === 'plasma_clip')     { PLASMA_CLIP += 2; plasmaAmmo = Math.min(plasmaAmmo + 2, PLASMA_CLIP); refreshAmmoHUD(); }
+  if (id === 'shotgun_dmg')     { SHOTGUN_DMG += 5; }
+  if (id === 'shotgun_pellets') { SHOTGUN_PELLETS += 1; }
+  if (id === 'shotgun_clip')    { SHOTGUN_CLIP += 2; shotgunAmmo = Math.min(shotgunAmmo + 2, SHOTGUN_CLIP); refreshAmmoHUD(); }
 }
 
 function makeCard(item, groupColor) {
@@ -465,7 +493,11 @@ function renderShopItems() {
   container.innerHTML = '';
   document.getElementById('shop-coins-val').textContent = coins;
 
-  for (const group of SHOP_GROUPS) {
+  const activeGroups = [...SHOP_GROUPS];
+  for (const gunIdx of [...ownedGuns].sort()) {
+    if (gunIdx > 0 && GUN_MOD_GROUPS[gunIdx]) activeGroups.push(GUN_MOD_GROUPS[gunIdx]);
+  }
+  for (const group of activeGroups) {
     const section = document.createElement('div');
     section.className = 'shop-group';
 
@@ -586,6 +618,26 @@ function beep(type) {
       o.type='sine'; o.frequency.setValueAtTime(500,t); o.frequency.setValueAtTime(700,t+.05); o.frequency.setValueAtTime(950,t+.1);
       g.gain.setValueAtTime(.12,t); g.gain.exponentialRampToValueAtTime(.001,t+.18);
       o.start(t); o.stop(t+.18);
+    } else if (type === 'shoot_plasma') {
+      // Sci-fi laser chirp: fast high-to-low sweep + high buzz overtone
+      o.type='sine'; o.frequency.setValueAtTime(2200,t); o.frequency.exponentialRampToValueAtTime(180,t+.11);
+      g.gain.setValueAtTime(.18,t); g.gain.exponentialRampToValueAtTime(.001,t+.13);
+      o.start(t); o.stop(t+.13);
+      const op=ctx.createOscillator(), gp=ctx.createGain();
+      op.connect(gp); gp.connect(ctx.destination);
+      op.type='square'; op.frequency.setValueAtTime(3800,t); op.frequency.exponentialRampToValueAtTime(600,t+.06);
+      gp.gain.setValueAtTime(.06,t); gp.gain.exponentialRampToValueAtTime(.001,t+.07);
+      op.start(t); op.stop(t+.07);
+    } else if (type === 'shoot_shotgun') {
+      // Deep boom: low-frequency thud + sharp attack crack
+      o.type='sawtooth'; o.frequency.setValueAtTime(95,t); o.frequency.exponentialRampToValueAtTime(18,t+.18);
+      g.gain.setValueAtTime(.45,t); g.gain.exponentialRampToValueAtTime(.001,t+.22);
+      o.start(t); o.stop(t+.22);
+      const oc=ctx.createOscillator(), gc=ctx.createGain();
+      oc.connect(gc); gc.connect(ctx.destination);
+      oc.type='sawtooth'; oc.frequency.setValueAtTime(1400,t); oc.frequency.exponentialRampToValueAtTime(80,t+.05);
+      gc.gain.setValueAtTime(.28,t); gc.gain.exponentialRampToValueAtTime(.001,t+.07);
+      oc.start(t); oc.stop(t+.07);
     } else if (type === 'plasma_charge') {
       o.type='sine'; o.frequency.setValueAtTime(180,t); o.frequency.exponentialRampToValueAtTime(900,t+.38);
       g.gain.setValueAtTime(.05,t); g.gain.linearRampToValueAtTime(.13,t+.28); g.gain.exponentialRampToValueAtTime(.001,t+.44);
@@ -618,7 +670,7 @@ function buildWorld() {
   // Neon strip lights along base of arena perimeter
   const neonColors = [0x00ffcc, 0xff00aa, 0x00aaff, 0xcc00ff];
   for (const [[x,z],ci] of [[[0,-ARENA+.2],0],[[0,ARENA-.2],1],[[-ARENA+.2,0],2],[[ARENA-.2,0],3]]) {
-    const pl=new THREE.PointLight(neonColors[ci], 7, 30); pl.position.set(x,.12,z); scene.add(pl);
+    const pl=new THREE.PointLight(neonColors[ci], 16, 50); pl.position.set(x,.12,z); scene.add(pl);
   }
 
   // Neon emissive edge trim on walls (thin glowing strip at top)
@@ -655,9 +707,9 @@ function buildWorld() {
     }
   }
 
-  // Cold ambient + moonlight
-  scene.add(new THREE.AmbientLight(0x1e1e50, 5.5));
-  const moon=new THREE.DirectionalLight(0x4466cc, 1.4);
+  // Ambient + moonlight — brighter so the open arena is clearly lit
+  scene.add(new THREE.AmbientLight(0x2a2a6a, 14));
+  const moon=new THREE.DirectionalLight(0x88aaff, 4.0);
   moon.position.set(-6,18,-4); moon.castShadow=!isMobile;
   if (!isMobile) {
     moon.shadow.camera.left=-28; moon.shadow.camera.right=28;
@@ -668,7 +720,7 @@ function buildWorld() {
 
   // Corner neon flood lights — brighter
   for (const [[cx,cz],col] of [[[-18,-18],0x00ffcc],[[18,-18],0xff00aa],[[-18,18],0xcc00ff],[[18,18],0x0088ff]]) {
-    const pl=new THREE.PointLight(col, 6, 50); pl.position.set(cx,WALL_H-.5,cz); scene.add(pl);
+    const pl=new THREE.PointLight(col, 18, 80); pl.position.set(cx,WALL_H-.5,cz); scene.add(pl);
   }
 }
 
@@ -1079,13 +1131,14 @@ let currentGun   = 0;    // 0=pistol  1=plasma  2=shotgun
 const ownedGuns  = new Set([0]); // plasma/shotgun unlock via shop
 let gun2Group    = null;
 let plasmaCell   = null;
-const PLASMA_CLIP = 8,   PLASMA_RES = 32,  PLASMA_DMG = 55, PLASMA_RATE = 0.50;
+const PLASMA_RES = 32;
+let PLASMA_CLIP = 8, PLASMA_DMG = 55, PLASMA_RATE = 0.50;
 let plasmaAmmo = PLASMA_CLIP, plasmaReserve = PLASMA_RES;
 
 let gun3Group    = null;
 let shotgunPump  = null; // sliding pump handle mesh
-const SHOTGUN_CLIP = 6,  SHOTGUN_RES = 30, SHOTGUN_DMG = 20, SHOTGUN_RATE = 0.70, SHOTGUN_PELLETS = 5;
-const PUMP_DEFAULT_Z = -0.16;
+const SHOTGUN_RES = 30, SHOTGUN_RATE = 0.70, PUMP_DEFAULT_Z = -0.16;
+let SHOTGUN_CLIP = 6, SHOTGUN_DMG = 20, SHOTGUN_PELLETS = 5;
 let shotgunAmmo = SHOTGUN_CLIP, shotgunReserve = SHOTGUN_RES;
 
 function buildGun2() {
@@ -1380,7 +1433,8 @@ function shoot() {
   else if (currentGun===1) plasmaAmmo--;
   else shotgunAmmo--;
   player.shootT=myRate;
-  beep('shoot'); showMuzzleFlash(); refreshAmmoHUD();
+  beep(currentGun===0?'shoot':currentGun===1?'shoot_plasma':'shoot_shotgun');
+  showMuzzleFlash(); refreshAmmoHUD();
   pitch+=.018+Math.random()*.008; pitch=Math.min(pitch,Math.PI/2.5);
 
   const burstColor = currentGun===0?0x44ff22:currentGun===1?0xff5500:0xffdd44;
@@ -1561,6 +1615,8 @@ function startGame() {
   for (const em of ejectedMags) scene.remove(em.mesh); ejectedMags.length=0;
   RA.active=false; RA.gun=0;
   currentGun=0; ownedGuns.clear(); ownedGuns.add(0);
+  PLASMA_CLIP=8; PLASMA_DMG=55; PLASMA_RATE=0.50;
+  SHOTGUN_CLIP=6; SHOTGUN_DMG=20; SHOTGUN_PELLETS=5;
   plasmaAmmo=PLASMA_CLIP; plasmaReserve=PLASMA_RES;
   shotgunAmmo=SHOTGUN_CLIP; shotgunReserve=SHOTGUN_RES;
   if (gunGroup)  { gunGroup.position.set(GUN_REST_X,gunBaseY,GUN_REST_Z); gunGroup.rotation.z=0; gunGroup.visible=true; }

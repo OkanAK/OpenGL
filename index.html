@@ -1079,49 +1079,52 @@ function spawnEjectedPlasmaCell() {
 
 function _shotgunReloadFrame(p) {
   if (!gun3Group) { if(p>=1) RA.active=false; return; }
-  // Gun tilts RIGHT (rotation.z → -0.22) — distinct from pistol (tilts left) and plasma (tilts left + x)
-  let fx,fy,frz;
-  if (p<=0.12) {
-    const t=easeInOut(phaseT(p,0.00,0.12));
-    fx=lerp(GUN_REST_X,GUN_REST_X+.06,t); fy=lerp(gunBaseY,gunBaseY-.07,t); frz=lerp(0,-.22,t);
-  } else if (p<=0.80) {
-    fx=GUN_REST_X+.06; fy=gunBaseY-.07; frz=-.22;
-  } else {
-    const t=easeInOut(phaseT(p,0.80,1.00));
-    fx=lerp(GUN_REST_X+.06,GUN_REST_X,t); fy=lerp(gunBaseY-.07,gunBaseY,t); frz=lerp(-.22,0,t);
-  }
-  gun3Group.position.x=fx; gun3Group.position.y=fy+gunRecoilY;
-  gun3Group.position.z=GUN_REST_Z; gun3Group.rotation.z=frz;
 
-  // Phase 2 (0.12-0.40): pump slides BACK, shells eject
-  if (shotgunPump&&p>=0.12&&p<0.40)
-    shotgunPump.position.z=lerp(PUMP_DEFAULT_Z,PUMP_DEFAULT_Z+.14,easeOut(phaseT(p,0.12,0.38)));
-  if (!RA.didMagOut&&p>=0.35) {
-    RA.didMagOut=true;
-    beep('mag_out');
-    // spawn a small shell casing
+  // Phase 1 (0-0.16): tilt hard RIGHT, pull toward player
+  let fx,fy,fz,frz;
+  if (p<=0.16) {
+    const t=easeInOut(phaseT(p,0.00,0.16));
+    fx=lerp(GUN_REST_X,GUN_REST_X+.12,t); fy=lerp(gunBaseY,gunBaseY-.15,t);
+    fz=lerp(GUN_REST_Z,-0.20,t); frz=lerp(0,-.44,t);
+  } else if (p<=0.82) {
+    fx=GUN_REST_X+.12; fy=gunBaseY-.15; fz=-0.20; frz=-.44;
+  } else {
+    const t=easeOutBack(phaseT(p,0.82,1.00));
+    fx=lerp(GUN_REST_X+.12,GUN_REST_X,t); fy=lerp(gunBaseY-.15,gunBaseY,t);
+    fz=lerp(-0.20,GUN_REST_Z,t); frz=lerp(-.44,0,t);
+  }
+  gun3Group.position.set(fx,fy+gunRecoilY,fz);
+  gun3Group.rotation.z=frz;
+
+  // Phase 2 (0.16-0.42): pump slides hard BACK
+  if (shotgunPump&&p>=0.16&&p<0.42)
+    shotgunPump.position.z=lerp(PUMP_DEFAULT_Z,PUMP_DEFAULT_Z+.22,easeOut(phaseT(p,0.16,0.40)));
+  if (!RA.didMagOut&&p>=0.38) {
+    RA.didMagOut=true; beep('mag_out');
     if (gun3Group) {
       gun3Group.updateMatrixWorld(true);
       const cGeo=new THREE.BoxGeometry(.014,.014,.04);
       const cMat=new THREE.MeshLambertMaterial({color:0xbb8800});
       const cMesh=new THREE.Mesh(cGeo,cMat);
       const wp2=new THREE.Vector3(); gun3Group.getWorldPosition(wp2); wp2.y+=.04;
-      cMesh.position.copy(wp2);
-      scene.add(cMesh);
+      cMesh.position.copy(wp2); scene.add(cMesh);
       ejectedMags.push({mesh:cMesh,
-        vel:new THREE.Vector3(.8+Math.random()*.4,.6+Math.random()*.3,(Math.random()-.5)*.4),
+        vel:new THREE.Vector3(.9+Math.random()*.5,.7+Math.random()*.3,(Math.random()-.5)*.4),
         life:3.0,bounces:0});
     }
   }
 
-  // Phase 3 (0.40-0.65): new shells feed in
-  if (!RA.didMagIn&&p>=0.62) { RA.didMagIn=true; beep('mag_in'); }
+  // Phase 3 (0.42-0.66): shells load in
+  if (!RA.didMagIn&&p>=0.63) { RA.didMagIn=true; beep('mag_in'); }
 
-  // Phase 4 (0.65-0.80): pump slams FORWARD — chambered
-  if (shotgunPump&&p>=0.65&&p<0.80)
-    shotgunPump.position.z=lerp(PUMP_DEFAULT_Z+.14,PUMP_DEFAULT_Z,easeIn(phaseT(p,0.65,0.80)));
-  if (!RA.didRack&&p>=0.75) { RA.didRack=true; beep('rack'); }
-  if (shotgunPump&&p>=0.80) shotgunPump.position.z=PUMP_DEFAULT_Z;
+  // Phase 4 (0.66-0.82): pump SLAMS forward — hard snap
+  if (shotgunPump&&p>=0.66&&p<0.82)
+    shotgunPump.position.z=lerp(PUMP_DEFAULT_Z+.22,PUMP_DEFAULT_Z,easeIn(phaseT(p,0.66,0.82)));
+  if (!RA.didRack&&p>=0.76) {
+    RA.didRack=true; beep('rack');
+    gunRecoilY+=0.020; // punch on pump slam
+  }
+  if (shotgunPump&&p>=0.82) shotgunPump.position.z=PUMP_DEFAULT_Z;
 
   if (p>=1.0) {
     RA.active=false; gun3Group.rotation.z=0;
@@ -1717,10 +1720,27 @@ function updatePlayer(dt) {
   if (shooting&&player.shootT<=0&&!player.reloading) shoot();
   if (player.reloading) { player.reloadT-=dt; if (player.reloadT<=0) finishReload(); }
 
-  gunRecoilY+=(-gunRecoilY)*Math.min(1,dt*18);
+  // Decay all recoil components
+  gunRecoilY  +=(-gunRecoilY) *Math.min(1,dt*22);
+  gunRecoilZ  +=(-gunRecoilZ) *Math.min(1,dt*16);
+  gunRecoilRx +=(-gunRecoilRx)*Math.min(1,dt*14);
+
+  // Weapon sway: turn lag + strafe + idle breathing
+  const _dy=yaw-gunSwayLastYaw; gunSwayLastYaw=yaw;
+  const _rightVel=player.vel.x*Math.cos(yaw)-player.vel.z*Math.sin(yaw);
+  const _swTX=clamp(-0.055,0.055, _rightVel*0.005 - _dy*0.18 + Math.sin(totalT*0.82)*0.004);
+  const _swTY=clamp(-0.040,0.040, Math.sin(totalT*1.15)*0.003);
+  gunSwayX=lerp(gunSwayX,_swTX,Math.min(1,dt*7));
+  gunSwayY=lerp(gunSwayY,_swTY,Math.min(1,dt*7));
+
   if (!RA.active) {
-    if (gunGroup)  gunGroup.position.y=gunBaseY+gunRecoilY;
-    if (gun2Group) gun2Group.position.y=gunBaseY+gunRecoilY;
+    const cg=currentGun===0?gunGroup:currentGun===1?gun2Group:gun3Group;
+    if (cg) {
+      cg.position.set(GUN_REST_X+gunSwayX, gunBaseY+gunRecoilY+gunSwayY, GUN_REST_Z+gunRecoilZ);
+      cg.rotation.z = gunRecoilRx + _rightVel*-0.012;
+      cg.rotation.x = 0;
+      cg.rotation.y = -0.04;
+    }
   }
 }
 

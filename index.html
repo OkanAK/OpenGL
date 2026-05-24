@@ -852,7 +852,8 @@ let rainMesh = null;
 // ===================================================================
 //  GUN MODEL
 // ===================================================================
-let gunGroup, gunBaseY = -.22, gunRecoilY = 0;
+let gunGroup, gunBaseY = -.22, gunRecoilY = 0, gunRecoilZ = 0, gunRecoilRx = 0;
+let gunSwayX = 0, gunSwayY = 0, gunSwayLastYaw = 0;
 let magMesh = null, slideMesh = null;
 const SLIDE_DEFAULT_Z = -.08;
 
@@ -863,6 +864,8 @@ function easeOut(t)        { return 1-(1-t)*(1-t); }
 function easeInOut(t)      { return t<.5?2*t*t:-1+(4-2*t)*t; }
 function clamp01(t)        { return Math.max(0,Math.min(1,t)); }
 function phaseT(t,s,e)     { return clamp01((t-s)/(e-s)); }
+function clamp(mn,mx,v)    { return Math.max(mn,Math.min(mx,v)); }
+function easeOutBack(t)    { const c=1.70158; return 1+(c+1)*Math.pow(t-1,3)+c*Math.pow(t-1,2); }
 
 function buildGun() {
   gunGroup = new THREE.Group();
@@ -891,10 +894,14 @@ function buildGun() {
 
 let muzzleTimer = 0;
 function showMuzzleFlash() {
-  const ag=currentGun===0?gunGroup:gun2Group;
+  const ag=currentGun===0?gunGroup:currentGun===1?gun2Group:gun3Group;
   const f=ag&&ag.getObjectByName('muzzleFlash');
   if (f) { f.visible=true; f.rotation.z=Math.random()*Math.PI; }
-  muzzleTimer=.055; gunRecoilY=.035;
+  muzzleTimer=.065;
+  const isShotgun=(currentGun===2);
+  gunRecoilY  = isShotgun ? 0.068 : 0.052;
+  gunRecoilZ  = isShotgun ? 0.095 : 0.062;
+  gunRecoilRx = (Math.random()-0.5)*0.055;
 }
 
 // ===================================================================
@@ -948,106 +955,105 @@ function updateReloadAnim(dt) {
 function _pistolReloadFrame(p) {
   if (!gunGroup) { if(p>=1) RA.active=false; return; }
 
-  const p1  = phaseT(p, 0.00, 0.15);
-  const xe1 = easeInOut(p1);
-  const p5  = phaseT(p, 0.78, 1.00);
-  const xe5 = easeInOut(p5);
-
-  let finalX, finalY, finalRz;
-  if (p <= 0.15) {
-    finalX  = lerp(GUN_REST_X, 0.05, xe1);
-    finalY  = lerp(gunBaseY, gunBaseY - 0.14, xe1);
-    finalRz = lerp(0, 0.28, xe1);
-  } else if (p <= 0.78) {
-    finalX=0.05; finalY=gunBaseY-0.14; finalRz=0.28;
+  // Phase 1 (0-0.20): gun drops down, pulls toward player, tilts hard left to show mag-well
+  let fx,fy,fz,frz,frx;
+  if (p<=0.20) {
+    const t=easeInOut(phaseT(p,0.00,0.20));
+    fx =lerp(GUN_REST_X, 0.09,         t);
+    fy =lerp(gunBaseY,   gunBaseY-.26,  t);
+    fz =lerp(GUN_REST_Z, -0.17,         t);
+    frz=lerp(0,           0.54,          t);
+    frx=lerp(0,           0.22,          t);
+  } else if (p<=0.76) {
+    fx=0.09; fy=gunBaseY-.26; fz=-0.17; frz=0.54; frx=0.22;
   } else {
-    finalX  = lerp(0.05, GUN_REST_X, xe5);
-    finalY  = lerp(gunBaseY - 0.14, gunBaseY, xe5);
-    finalRz = lerp(0.28, 0, xe5);
+    const t=easeOutBack(phaseT(p,0.76,1.00));
+    fx =lerp(0.09,       GUN_REST_X,   t);
+    fy =lerp(gunBaseY-.26,gunBaseY,    t);
+    fz =lerp(-0.17,      GUN_REST_Z,   t);
+    frz=lerp(0.54,       0,             t);
+    frx=lerp(0.22,       0,             t);
   }
-  gunGroup.position.x=finalX; gunGroup.position.y=finalY+gunRecoilY; gunGroup.position.z=GUN_REST_Z;
-  gunGroup.rotation.z=finalRz;
+  gunGroup.position.set(fx, fy+gunRecoilY, fz);
+  gunGroup.rotation.z=frz; gunGroup.rotation.x=frx;
 
-  if (magMesh && magMesh.visible && p>=0.15 && p<0.30) {
-    magMesh.position.y=lerp(-0.09,-0.32,easeIn(phaseT(p,0.15,0.29)));
-  }
-  if (!RA.didMagOut && p>=0.28) { RA.didMagOut=true; spawnEjectedMag(); beep('mag_out'); }
+  // Phase 2 (0.20-0.34): mag slides out and falls
+  if (magMesh&&magMesh.visible&&p>=0.20&&p<0.34)
+    magMesh.position.y=lerp(-0.09,-0.48,easeIn(phaseT(p,0.20,0.33)));
+  if (!RA.didMagOut&&p>=0.31) { RA.didMagOut=true; spawnEjectedMag(); beep('mag_out'); }
 
-  if (magMesh && !magMesh.visible && p>=0.40) { magMesh.position.y=-0.32; magMesh.visible=true; }
-  if (magMesh && magMesh.visible && p>=0.40 && p<0.62) {
-    magMesh.position.y=lerp(-0.32,-0.09,easeOut(phaseT(p,0.40,0.62)));
-  }
-  if (!RA.didMagIn && p>=0.60) { RA.didMagIn=true; beep('mag_in'); }
-  if (p>=0.62 && magMesh) magMesh.position.y=-0.09;
+  // Phase 3 (0.36-0.56): fresh mag slaps up from below
+  if (magMesh&&!magMesh.visible&&p>=0.36) { magMesh.position.y=-0.62; magMesh.visible=true; }
+  if (magMesh&&magMesh.visible&&p>=0.36&&p<0.56)
+    magMesh.position.y=lerp(-0.62,-0.09,easeOut(phaseT(p,0.36,0.55)));
+  if (!RA.didMagIn&&p>=0.53) { RA.didMagIn=true; beep('mag_in'); }
+  if (p>=0.56&&magMesh) magMesh.position.y=-0.09;
 
-  if (slideMesh && p>=0.62 && p<0.78) {
-    const p4=phaseT(p,0.62,0.78);
-    slideMesh.position.z=p4<0.5
-      ?lerp(SLIDE_DEFAULT_Z,SLIDE_DEFAULT_Z-0.10,easeOut(p4*2))
-      :lerp(SLIDE_DEFAULT_Z-0.10,SLIDE_DEFAULT_Z,easeIn((p4-0.5)*2));
+  // Phase 4 (0.56-0.76): slide racks hard back then snaps forward
+  if (slideMesh&&p>=0.56&&p<0.76) {
+    const s=phaseT(p,0.56,0.76);
+    slideMesh.position.z=s<0.45
+      ?lerp(SLIDE_DEFAULT_Z, SLIDE_DEFAULT_Z-0.17, easeOut(s/0.45))
+      :lerp(SLIDE_DEFAULT_Z-0.17, SLIDE_DEFAULT_Z, easeIn((s-0.45)/0.55));
   }
-  if (!RA.didRack && p>=0.70) { RA.didRack=true; beep('rack'); }
-  if (p>=0.78 && slideMesh) slideMesh.position.z=SLIDE_DEFAULT_Z;
+  if (!RA.didRack&&p>=0.68) {
+    RA.didRack=true; beep('rack');
+    gunRecoilY+=0.018; // small punch on slide snap
+  }
+  if (p>=0.76&&slideMesh) slideMesh.position.z=SLIDE_DEFAULT_Z;
 
   if (p>=1.0) {
     RA.active=false;
-    gunGroup.rotation.z=0;
+    gunGroup.rotation.set(0,-.04,0);
     gunGroup.position.set(GUN_REST_X,gunBaseY,GUN_REST_Z);
-    if (magMesh)   { magMesh.position.y=-0.09; magMesh.visible=true; }
-    if (slideMesh)   slideMesh.position.z=SLIDE_DEFAULT_Z;
+    if (magMesh)  { magMesh.position.y=-0.09; magMesh.visible=true; }
+    if (slideMesh) slideMesh.position.z=SLIDE_DEFAULT_Z;
   }
 }
 
 function _plasmaReloadFrame(p) {
   if (!gun2Group) { if(p>=1) RA.active=false; return; }
 
-  // Gun tilts to reveal cell port on top, shifts slightly left
-  const p1  = phaseT(p, 0.00, 0.12);
-  const p5  = phaseT(p, 0.80, 1.00);
-  let fx, fy, frz, frx;
-  if (p <= 0.12) {
-    const t=easeInOut(p1);
-    fx=lerp(GUN_REST_X,GUN_REST_X-.06,t); fy=lerp(gunBaseY,gunBaseY-.09,t);
-    frz=lerp(0,-.20,t); frx=lerp(0,.30,t);
-  } else if (p<=0.80) {
-    fx=GUN_REST_X-.06; fy=gunBaseY-.09; frz=-.20; frx=.30;
+  // Phase 1: gun tilts left+back, pulls toward player to access cell port
+  let fx,fy,fz,frz,frx;
+  if (p<=0.14) {
+    const t=easeInOut(phaseT(p,0.00,0.14));
+    fx =lerp(GUN_REST_X,GUN_REST_X-.10,t); fy=lerp(gunBaseY,gunBaseY-.14,t);
+    fz =lerp(GUN_REST_Z,-0.22,t);
+    frz=lerp(0,-.28,t); frx=lerp(0,.38,t);
+  } else if (p<=0.82) {
+    fx=GUN_REST_X-.10; fy=gunBaseY-.14; fz=-0.22; frz=-.28; frx=.38;
   } else {
-    const t=easeInOut(p5);
-    fx=lerp(GUN_REST_X-.06,GUN_REST_X,t); fy=lerp(gunBaseY-.09,gunBaseY,t);
-    frz=lerp(-.20,0,t); frx=lerp(.30,0,t);
+    const t=easeOutBack(phaseT(p,0.82,1.00));
+    fx=lerp(GUN_REST_X-.10,GUN_REST_X,t); fy=lerp(gunBaseY-.14,gunBaseY,t);
+    fz=lerp(-0.22,GUN_REST_Z,t);
+    frz=lerp(-.28,0,t); frx=lerp(.38,0,t);
   }
-  gun2Group.position.x=fx; gun2Group.position.y=fy+gunRecoilY;
-  gun2Group.position.z=GUN_REST_Z;
+  gun2Group.position.set(fx,fy+gunRecoilY,fz);
   gun2Group.rotation.z=frz; gun2Group.rotation.x=frx;
 
-  // Phase 2 (0.12-0.32): cell rises out of port
-  if (plasmaCell && plasmaCell.visible && p>=0.12 && p<0.32) {
-    plasmaCell.position.y=lerp(0.068,0.26,easeIn(phaseT(p,0.12,0.32)));
-  }
-  if (!RA.didCellOut && p>=0.30) {
-    RA.didCellOut=true;
-    spawnEjectedPlasmaCell();
-    beep('mag_out');
-  }
+  // Phase 2: cell rises out of port
+  if (plasmaCell&&plasmaCell.visible&&p>=0.14&&p<0.34)
+    plasmaCell.position.y=lerp(0.068,0.30,easeIn(phaseT(p,0.14,0.34)));
+  if (!RA.didCellOut&&p>=0.31) { RA.didCellOut=true; spawnEjectedPlasmaCell(); beep('mag_out'); }
 
-  // Phase 3 (0.38-0.62): new cell descends from above
-  if (plasmaCell && !plasmaCell.visible && p>=0.38) { plasmaCell.position.y=0.28; plasmaCell.visible=true; }
-  if (plasmaCell && plasmaCell.visible && p>=0.38 && p<0.62) {
-    plasmaCell.position.y=lerp(0.28,0.068,easeOut(phaseT(p,0.38,0.62)));
-  }
-  if (!RA.didCellIn && p>=0.60) { RA.didCellIn=true; beep('mag_in'); }
-  if (p>=0.62 && plasmaCell) plasmaCell.position.y=0.068;
+  // Phase 3: new cell descends and locks in
+  if (plasmaCell&&!plasmaCell.visible&&p>=0.40) { plasmaCell.position.y=0.34; plasmaCell.visible=true; }
+  if (plasmaCell&&plasmaCell.visible&&p>=0.40&&p<0.62)
+    plasmaCell.position.y=lerp(0.34,0.068,easeOut(phaseT(p,0.40,0.62)));
+  if (!RA.didCellIn&&p>=0.60) { RA.didCellIn=true; beep('mag_in'); }
+  if (p>=0.62&&plasmaCell) plasmaCell.position.y=0.068;
 
-  // Phase 4 (0.62-0.80): barrel charges — glow pulses
+  // Phase 4: barrel charges with glow pulse
   const bg=gun2Group.getObjectByName('barrelGlow');
-  if (bg && p>=0.62 && p<0.80) {
-    const cp=phaseT(p,0.62,0.80);
-    const pulse=Math.sin(cp*Math.PI*3)*.5+.5;
-    bg.material.color.setHex(pulse>0.5?0xff5500:0x882200);
-    bg.scale.setScalar(1+pulse*.6);
+  if (bg&&p>=0.62&&p<0.82) {
+    const cp=phaseT(p,0.62,0.82);
+    const pulse=Math.sin(cp*Math.PI*4)*.5+.5;
+    bg.material.color.setHex(pulse>0.5?0xff7700:0x992200);
+    bg.scale.setScalar(1+pulse*.8);
   }
-  if (!RA.didCharge && p>=0.70) { RA.didCharge=true; beep('plasma_charge'); }
-  if (bg && p>=0.80) { bg.material.color.setHex(0x331100); bg.scale.setScalar(1); }
+  if (!RA.didCharge&&p>=0.72) { RA.didCharge=true; beep('plasma_charge'); }
+  if (bg&&p>=0.82) { bg.material.color.setHex(0x331100); bg.scale.setScalar(1); }
 
   if (p>=1.0) {
     RA.active=false;

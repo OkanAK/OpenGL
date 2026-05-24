@@ -924,8 +924,8 @@ function triggerGameOver() {
 function updatePlayer(dt) {
   camera.rotation.order='YXZ'; camera.rotation.y=yaw; camera.rotation.x=pitch;
 
-  const fwd  =new THREE.Vector3(Math.sin(yaw),0,-Math.cos(yaw));
-  const right=new THREE.Vector3(Math.cos(yaw),0, Math.sin(yaw));
+  const fwd  =new THREE.Vector3(-Math.sin(yaw),0,-Math.cos(yaw));
+  const right=new THREE.Vector3( Math.cos(yaw),0,-Math.sin(yaw));
   const move =new THREE.Vector3();
 
   if (keys.has('KeyW')||keys.has('ArrowUp'))    move.addScaledVector(fwd,   1);

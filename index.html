@@ -50,6 +50,16 @@ canvas { display:block; }
 #xhair::before { width:22px; height:2px; top:10px; left:0; }
 #xhair::after  { width:2px; height:22px; top:0; left:10px; }
 #xhair.hit::before,#xhair.hit::after { background:#f33; }
+#slowmo-overlay {
+  position:fixed; inset:0; pointer-events:none; z-index:28;
+  background:radial-gradient(ellipse at center, transparent 45%, rgba(0,60,220,.35) 100%);
+  opacity:0; transition:opacity .08s;
+}
+#slowmo-label {
+  position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+  color:rgba(80,160,255,.9); font-size:11px; letter-spacing:6px;
+  pointer-events:none; z-index:29; opacity:0; transition:opacity .08s;
+}
 #hud-top {
   position:absolute; top:0; left:0; right:0; padding:12px 16px;
   display:flex; justify-content:space-between; align-items:flex-start;
@@ -201,6 +211,7 @@ canvas { display:block; }
 }
 #btn-jump   { width:60px; height:60px; bottom:132px; right:32px; background:rgba(40,90,210,.5); border:2px solid rgba(80,140,255,.75); }
 #btn-reload { width:60px; height:60px; bottom:132px; right:108px; background:rgba(160,120,0,.5); border:2px solid rgba(255,195,0,.75); }
+#btn-swap   { width:60px; height:60px; bottom:26px;  right:108px; background:rgba(0,180,100,.4); border:2px solid rgba(0,255,140,.75); }
 </style>
 </head>
 <body>
@@ -282,7 +293,10 @@ canvas { display:block; }
   <div id="look-zone"></div>
   <div id="btn-jump"  class="tc-btn">JUMP</div>
   <div id="btn-reload" class="tc-btn">RLD</div>
+  <div id="btn-swap"   class="tc-btn">SWAP</div>
 </div>
+<div id="slowmo-overlay"></div>
+<div id="slowmo-label">SWITCHING</div>
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
 <script>
@@ -344,6 +358,8 @@ let yaw = 0, pitch = 0, camBobT = 0;
 // ---- Input -----------------------------------------------------
 const keys = new Set();
 let shooting = false, locked = false;
+let slowMoT = 0;
+const SLOW_MO_DUR = 1.4, SLOW_MO_SCALE = 0.12;
 
 // ---- Touch -----------------------------------------------------
 const tj = { active:false, id:-1, cx:0, cy:0, dx:0, dy:0 };
@@ -598,18 +614,8 @@ function buildWorld() {
   floor.rotation.x = -Math.PI/2; floor.receiveShadow=true; scene.add(floor);
   scene.add(new THREE.GridHelper(ARENA*2, 22, 0x18186a, 0x18186a));
 
-  // No ceiling — open to the cyberpunk sky
-  for (const [p,ry,sz] of [
-    [[0,WALL_H/2,-ARENA],0,[ARENA*2,WALL_H]],
-    [[0,WALL_H/2, ARENA],Math.PI,[ARENA*2,WALL_H]],
-    [[-ARENA,WALL_H/2,0],Math.PI/2,[ARENA*2,WALL_H]],
-    [[ ARENA,WALL_H/2,0],-Math.PI/2,[ARENA*2,WALL_H]],
-  ]) {
-    const m=new THREE.Mesh(new THREE.PlaneGeometry(sz[0],sz[1]),mWall);
-    m.position.set(...p); m.rotation.y=ry; m.receiveShadow=true; scene.add(m);
-  }
-
-  // Neon strip lights along base of walls: alternating cyan / magenta
+  // Walls hidden so the cyberpunk skybox is visible — arena bounds enforced in code
+  // Neon strip lights along base of arena perimeter
   const neonColors = [0x00ffcc, 0xff00aa, 0x00aaff, 0xcc00ff];
   for (const [[x,z],ci] of [[[0,-ARENA+.2],0],[[0,ARENA-.2],1],[[-ARENA+.2,0],2],[[ARENA-.2,0],3]]) {
     const pl=new THREE.PointLight(neonColors[ci], 7, 30); pl.position.set(x,.12,z); scene.add(pl);
@@ -1195,6 +1201,7 @@ function switchGun() {
   if (gun3Group) gun3Group.visible = (currentGun===2);
   refreshAmmoHUD();
   beep('rack');
+  slowMoT = SLOW_MO_DUR;
 }
 
 // ===================================================================
@@ -1662,9 +1669,14 @@ let lastT = 0, totalT = 0;
 function loop(ts) {
   requestAnimationFrame(loop);
   const dt=Math.min((ts-lastT)/1000,.05); lastT=ts;
+  if (slowMoT>0) slowMoT=Math.max(0,slowMoT-dt);
+  const gdt = slowMoT>0 ? dt*SLOW_MO_SCALE : dt;
+  const _sop = slowMoT>0 ? String(Math.min(1,slowMoT/SLOW_MO_DUR+.2)) : '0';
+  const smo=document.getElementById('slowmo-overlay'); if(smo)smo.style.opacity=_sop;
+  const sml=document.getElementById('slowmo-label');   if(sml)sml.style.opacity=_sop;
   totalT+=dt;
 
-  // Always tick skybox and rain (visible even in shop/dead states)
+  // Always tick skybox and rain at full speed (atmospheric)
   if (skyMat) skyMat.uniforms.uTime.value = totalT;
   if (rainGeo && rainPos) {
     const cx=camera.position.x, cz=camera.position.z;
@@ -1681,27 +1693,27 @@ function loop(ts) {
   }
 
   if (gState==='playing') {
-    updatePlayer(dt);
-    for (let i=enemies.length-1;i>=0;i--) { if (updateZombie(enemies[i],dt)) enemies.splice(i,1); }
+    updatePlayer(gdt);
+    for (let i=enemies.length-1;i>=0;i--) { if (updateZombie(enemies[i],gdt)) enemies.splice(i,1); }
     for (let i=particles.length-1;i>=0;i--) {
-      const p=particles[i]; p.life-=dt;
-      p.mesh.position.addScaledVector(p.vel,dt); p.vel.y-=14*dt;
+      const p=particles[i]; p.life-=gdt;
+      p.mesh.position.addScaledVector(p.vel,gdt); p.vel.y-=14*gdt;
       p.mesh.material.opacity=Math.max(0,p.life/.4);
       if (p.life<=0) { scene.remove(p.mesh); particles.splice(i,1); }
     }
     for (let i=tracers.length-1;i>=0;i--) {
-      const tr=tracers[i]; tr.life-=dt;
+      const tr=tracers[i]; tr.life-=gdt;
       tr.line.material.opacity=Math.max(0,tr.life/.06);
       if (tr.life<=0) { scene.remove(tr.line); tracers.splice(i,1); }
     }
-    if (muzzleTimer>0) { muzzleTimer-=dt; if (muzzleTimer<=0){const ag=currentGun===0?gunGroup:gun2Group;const f=ag&&ag.getObjectByName('muzzleFlash');if(f)f.visible=false;} }
-    if (xhairFlash>0) { xhairFlash-=dt; if (xhairFlash<=0) document.getElementById('xhair').classList.remove('hit'); }
-    updateReloadAnim(dt);
+    if (muzzleTimer>0) { muzzleTimer-=gdt; if (muzzleTimer<=0){const ag=currentGun===0?gunGroup:gun2Group;const f=ag&&ag.getObjectByName('muzzleFlash');if(f)f.visible=false;} }
+    if (xhairFlash>0) { xhairFlash-=gdt; if (xhairFlash<=0) document.getElementById('xhair').classList.remove('hit'); }
+    updateReloadAnim(gdt);
     for (let i=ejectedMags.length-1;i>=0;i--) {
-      const em=ejectedMags[i]; em.life-=dt;
-      em.vel.y-=9*dt;
-      em.mesh.position.addScaledVector(em.vel,dt);
-      em.mesh.rotation.x+=em.vel.length()*dt*4;
+      const em=ejectedMags[i]; em.life-=gdt;
+      em.vel.y-=9*gdt;
+      em.mesh.position.addScaledVector(em.vel,gdt);
+      em.mesh.rotation.x+=em.vel.length()*gdt*4;
       if (em.mesh.position.y<=0.03&&em.vel.y<0) {
         em.vel.y*=-.38; em.vel.x*=.75; em.vel.z*=.75; em.bounces++;
         if (em.bounces>3) em.vel.set(0,0,0);
@@ -1781,6 +1793,7 @@ function setupTouchInput() {
   bj.addEventListener('touchend',  e=>{ e.preventDefault(); keys.delete('Space'); },{passive:false});
 
   document.getElementById('btn-reload').addEventListener('touchstart',e=>{ e.preventDefault(); if(gState==='playing') startReload(); },{passive:false});
+  document.getElementById('btn-swap').addEventListener('touchstart',e=>{ e.preventDefault(); if(gState==='playing') switchGun(); },{passive:false});
 }
 
 function attachPlay(id) {

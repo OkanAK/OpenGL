@@ -98,46 +98,51 @@ canvas { display:block; }
    ================================================================ */
 #shop-screen {
   position:fixed; inset:0;
-  background:rgba(0,5,0,0.94);
+  background:rgba(0,3,8,0.96);
   z-index:60;
   display:flex; flex-direction:column; align-items:center;
-  padding:20px 16px 32px;
-  overflow-y:auto; -webkit-overflow-scrolling:touch;
+  padding:12px 12px 12px;
+  overflow:hidden;
   opacity:0; pointer-events:none;
   transition:opacity .35s;
 }
 #shop-screen.open { opacity:1; pointer-events:auto; }
 
-#shop-header { text-align:center; margin-bottom:18px; }
+#shop-header { text-align:center; margin-bottom:8px; flex-shrink:0; }
 #shop-title {
-  font-size:clamp(28px,6vw,44px); letter-spacing:8px; color:#44ff44;
-  text-shadow:0 0 24px rgba(60,255,60,.6); margin-bottom:4px;
+  font-size:clamp(18px,3.5vw,28px); letter-spacing:6px; color:#44ff44;
+  text-shadow:0 0 20px rgba(60,255,60,.6); margin-bottom:2px;
 }
-#shop-subtitle { color:#888; font-size:12px; letter-spacing:3px; margin-bottom:10px; }
-#shop-coins-row { display:flex; align-items:center; gap:10px; justify-content:center; }
-#shop-coins-label { color:#aaa; font-size:13px; letter-spacing:2px; }
-#shop-coins-val { color:#ffd700; font-size:clamp(22px,5vw,32px); font-weight:bold; }
+#shop-subtitle { color:#888; font-size:11px; letter-spacing:3px; margin-bottom:6px; }
+#shop-coins-row { display:flex; align-items:center; gap:8px; justify-content:center; }
+#shop-coins-label { color:#aaa; font-size:12px; letter-spacing:2px; }
+#shop-coins-val { color:#ffd700; font-size:clamp(18px,4vw,26px); font-weight:bold; }
 
-/* shop groups replace the flat grid */
-.shop-group { width:100%; max-width:780px; margin-bottom:22px; }
+/* shop groups in a horizontal row so everything fits without scrolling */
+#shop-groups {
+  display:flex; flex-direction:row; gap:10px;
+  flex:1; min-height:0;
+  width:100%; max-width:1040px;
+}
+.shop-group { flex:1; min-width:0; display:flex; flex-direction:column; }
 .shop-group-header {
-  font-size:10px; letter-spacing:4px; font-weight:bold;
-  padding:0 0 6px; margin-bottom:10px;
+  font-size:9px; letter-spacing:4px; font-weight:bold;
+  padding:0 0 5px; margin-bottom:7px;
   border-bottom:2px solid var(--gc,#666);
-  color:var(--gc,#666);
+  color:var(--gc,#666); flex-shrink:0;
 }
 .shop-group-grid {
   display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(155px,1fr));
-  gap:10px;
+  grid-template-columns:1fr 1fr;
+  gap:6px;
 }
 
 .shop-card {
   background:rgba(255,255,255,.04);
   border:1px solid rgba(255,255,255,.1);
   border-top:3px solid #666;
-  border-radius:3px; padding:14px 12px;
-  display:flex; flex-direction:column; gap:5px;
+  border-radius:3px; padding:8px 9px;
+  display:flex; flex-direction:column; gap:3px;
   cursor:pointer; position:relative;
   transition:background .12s, border-color .12s, transform .1s;
   user-select:none; -webkit-tap-highlight-color:transparent;
@@ -147,29 +152,35 @@ canvas { display:block; }
 .shop-card.broke  { opacity:.38; cursor:not-allowed; }
 .shop-card.maxed  { opacity:.3;  cursor:not-allowed; }
 .shop-card.maxed::after {
-  content:'MAXED'; position:absolute; top:7px; right:8px;
+  content:'MAXED'; position:absolute; top:5px; right:7px;
   color:#888; font-size:9px; letter-spacing:2px;
 }
 .shop-card.flash { animation:cardFlash .35s ease-out; }
 @keyframes cardFlash { 0%{background:rgba(68,255,68,.35)} 100%{background:rgba(255,255,255,.04)} }
 
-.sc-name { color:#fff; font-size:14px; font-weight:bold; letter-spacing:1px; }
-.sc-desc { color:#999; font-size:11px; line-height:1.5; flex:1; }
-.sc-cost { font-size:17px; font-weight:bold; color:#ffd700; }
-.sc-owned { color:#555; font-size:10px; letter-spacing:1px; }
+.sc-name { color:#fff; font-size:11px; font-weight:bold; letter-spacing:1px; }
+.sc-desc { color:#999; font-size:10px; line-height:1.4; flex:1; }
+.sc-cost { font-size:13px; font-weight:bold; color:#ffd700; }
+.sc-owned { color:#555; font-size:9px; letter-spacing:1px; }
 
 /* category accent colours applied via inline style --ac */
 .shop-card { border-top-color: var(--ac, #666); }
 
 #shop-continue {
-  padding:13px 56px; background:#44ff44; color:#000;
-  border:none; cursor:pointer; font-size:17px; font-family:inherit;
+  padding:10px 48px; background:#44ff44; color:#000;
+  border:none; cursor:pointer; font-size:15px; font-family:inherit;
   font-weight:bold; letter-spacing:4px; text-transform:uppercase;
   transition:background .1s,transform .1s; outline:none;
-  -webkit-tap-highlight-color:transparent; margin-top:4px; flex-shrink:0;
+  -webkit-tap-highlight-color:transparent; margin-top:8px; flex-shrink:0;
 }
 #shop-continue:hover  { background:#66ff66; transform:scale(1.04); }
 #shop-continue:active { transform:scale(.97); }
+/* On narrow screens fall back to scroll */
+@media (max-height:560px),(max-width:500px) {
+  #shop-screen { overflow-y:auto; }
+  #shop-groups { flex-direction:column; }
+  .shop-group { flex:none; }
+}
 
 /* ---- Mobile touch controls ---- */
 #touch-ui { display:none; }
@@ -249,6 +260,7 @@ canvas { display:block; }
       <div id="hp-text">100</div>
     </div>
     <div id="ammo-block">
+      <div id="gun-name" style="color:#888;font-size:9px;letter-spacing:3px;margin-bottom:2px;">PISTOL</div>
       <span id="ammo-cur">30</span><span id="ammo-sep"> / </span><span id="ammo-res">90</span>
     </div>
   </div>
@@ -543,6 +555,10 @@ function beep(type) {
       o.type='sine'; o.frequency.setValueAtTime(500,t); o.frequency.setValueAtTime(700,t+.05); o.frequency.setValueAtTime(950,t+.1);
       g.gain.setValueAtTime(.12,t); g.gain.exponentialRampToValueAtTime(.001,t+.18);
       o.start(t); o.stop(t+.18);
+    } else if (type === 'plasma_charge') {
+      o.type='sine'; o.frequency.setValueAtTime(180,t); o.frequency.exponentialRampToValueAtTime(900,t+.38);
+      g.gain.setValueAtTime(.05,t); g.gain.linearRampToValueAtTime(.13,t+.28); g.gain.exponentialRampToValueAtTime(.001,t+.44);
+      o.start(t); o.stop(t+.44);
     } else if (type === 'groan') {
       const lfo=ctx.createOscillator(), lg=ctx.createGain();
       lfo.connect(lg); lg.connect(o.frequency);
@@ -558,15 +574,14 @@ function beep(type) {
 //  WORLD
 // ===================================================================
 function buildWorld() {
-  // Wet dark concrete floor
-  const mFloor = new THREE.MeshLambertMaterial({ color:0x070710 });
-  const mWall  = new THREE.MeshLambertMaterial({ color:0x0a0a18 });
-  const mBox   = new THREE.MeshLambertMaterial({ color:0x0d0d20 });
-  const mBoxAc = new THREE.MeshLambertMaterial({ color:0x14102a });
+  const mFloor = new THREE.MeshLambertMaterial({ color:0x111128 });
+  const mWall  = new THREE.MeshLambertMaterial({ color:0x181832 });
+  const mBox   = new THREE.MeshLambertMaterial({ color:0x1c1c38 });
+  const mBoxAc = new THREE.MeshLambertMaterial({ color:0x241a40 });
 
   const floor = new THREE.Mesh(new THREE.PlaneGeometry(ARENA*2,ARENA*2,22,22), mFloor);
   floor.rotation.x = -Math.PI/2; floor.receiveShadow=true; scene.add(floor);
-  scene.add(new THREE.GridHelper(ARENA*2, 22, 0x0a0a30, 0x0a0a30));
+  scene.add(new THREE.GridHelper(ARENA*2, 22, 0x18186a, 0x18186a));
 
   // No ceiling — open to the cyberpunk sky
   for (const [p,ry,sz] of [
@@ -582,7 +597,7 @@ function buildWorld() {
   // Neon strip lights along base of walls: alternating cyan / magenta
   const neonColors = [0x00ffcc, 0xff00aa, 0x00aaff, 0xcc00ff];
   for (const [[x,z],ci] of [[[0,-ARENA+.2],0],[[0,ARENA-.2],1],[[-ARENA+.2,0],2],[[ARENA-.2,0],3]]) {
-    const pl=new THREE.PointLight(neonColors[ci], 4, 22); pl.position.set(x,.12,z); scene.add(pl);
+    const pl=new THREE.PointLight(neonColors[ci], 7, 30); pl.position.set(x,.12,z); scene.add(pl);
   }
 
   // Neon emissive edge trim on walls (thin glowing strip at top)
@@ -619,9 +634,9 @@ function buildWorld() {
     }
   }
 
-  // Cold ambient + dim blue moon light
-  scene.add(new THREE.AmbientLight(0x080820, 3.5));
-  const moon=new THREE.DirectionalLight(0x2244aa, 0.6);
+  // Cold ambient + moonlight
+  scene.add(new THREE.AmbientLight(0x1e1e50, 5.5));
+  const moon=new THREE.DirectionalLight(0x4466cc, 1.4);
   moon.position.set(-6,18,-4); moon.castShadow=!isMobile;
   if (!isMobile) {
     moon.shadow.camera.left=-28; moon.shadow.camera.right=28;
@@ -630,9 +645,9 @@ function buildWorld() {
   }
   scene.add(moon);
 
-  // Corner neon flood lights
+  // Corner neon flood lights — brighter
   for (const [[cx,cz],col] of [[[-18,-18],0x00ffcc],[[18,-18],0xff00aa],[[-18,18],0xcc00ff],[[18,18],0x0088ff]]) {
-    const pl=new THREE.PointLight(col, 3, 36); pl.position.set(cx,WALL_H-.5,cz); scene.add(pl);
+    const pl=new THREE.PointLight(col, 6, 50); pl.position.set(cx,WALL_H-.5,cz); scene.add(pl);
   }
 }
 
@@ -803,7 +818,8 @@ function buildGun() {
 
 let muzzleTimer = 0;
 function showMuzzleFlash() {
-  const f=gunGroup.getObjectByName('muzzleFlash');
+  const ag=currentGun===0?gunGroup:gun2Group;
+  const f=ag&&ag.getObjectByName('muzzleFlash');
   if (f) { f.visible=true; f.rotation.z=Math.random()*Math.PI; }
   muzzleTimer=.055; gunRecoilY=.035;
 }
@@ -812,17 +828,20 @@ function showMuzzleFlash() {
 //  RELOAD ANIMATION
 // ===================================================================
 const GUN_REST_X = 0.24, GUN_REST_Z = -0.38;
-const RA = { active:false, t:0, dur:2.0, didMagOut:false, didMagIn:false, didRack:false };
+const RA = { active:false, t:0, dur:2.0, gun:0,
+  didMagOut:false, didMagIn:false, didRack:false,
+  didCellOut:false, didCellIn:false, didCharge:false };
 const ejectedMags = [];
 
 function startReloadAnim() {
   RA.active    = true;
   RA.t         = 0;
-  RA.dur       = RELOAD_T * shopReloadMult;
-  RA.didMagOut = false;
-  RA.didMagIn  = false;
-  RA.didRack   = false;
-  if (magMesh) magMesh.visible = true;
+  RA.gun       = currentGun;
+  RA.dur       = RELOAD_T * shopReloadMult * (currentGun===0 ? 1.0 : 1.3);
+  RA.didMagOut  = false; RA.didMagIn  = false; RA.didRack   = false;
+  RA.didCellOut = false; RA.didCellIn = false; RA.didCharge = false;
+  if (RA.gun===0 && magMesh)    magMesh.visible    = true;
+  if (RA.gun===1 && plasmaCell) plasmaCell.visible = true;
 }
 
 function spawnEjectedMag() {
@@ -844,15 +863,18 @@ function spawnEjectedMag() {
 }
 
 function updateReloadAnim(dt) {
-  if (!RA.active || !gunGroup) return;
+  if (!RA.active) return;
   RA.t = Math.min(RA.t + dt, RA.dur);
   const p = RA.t / RA.dur;
+  if (RA.gun === 0) _pistolReloadFrame(p);
+  else              _plasmaReloadFrame(p);
+}
 
-  // Phase 1 (0.00-0.15): swing gun inward/down
+function _pistolReloadFrame(p) {
+  if (!gunGroup) { if(p>=1) RA.active=false; return; }
+
   const p1  = phaseT(p, 0.00, 0.15);
   const xe1 = easeInOut(p1);
-
-  // Phase 5 (0.78-1.00): return to rest
   const p5  = phaseT(p, 0.78, 1.00);
   const xe5 = easeInOut(p5);
 
@@ -862,69 +884,190 @@ function updateReloadAnim(dt) {
     finalY  = lerp(gunBaseY, gunBaseY - 0.14, xe1);
     finalRz = lerp(0, 0.28, xe1);
   } else if (p <= 0.78) {
-    finalX  = 0.05;
-    finalY  = gunBaseY - 0.14;
-    finalRz = 0.28;
+    finalX=0.05; finalY=gunBaseY-0.14; finalRz=0.28;
   } else {
     finalX  = lerp(0.05, GUN_REST_X, xe5);
     finalY  = lerp(gunBaseY - 0.14, gunBaseY, xe5);
     finalRz = lerp(0.28, 0, xe5);
   }
+  gunGroup.position.x=finalX; gunGroup.position.y=finalY+gunRecoilY; gunGroup.position.z=GUN_REST_Z;
+  gunGroup.rotation.z=finalRz;
 
-  gunGroup.position.x = finalX;
-  gunGroup.position.y = finalY + gunRecoilY;
-  gunGroup.position.z = GUN_REST_Z;
-  gunGroup.rotation.z = finalRz;
-
-  // Phase 2 (0.15-0.28): mag slides out
-  if (magMesh && magMesh.visible && p >= 0.15 && p < 0.30) {
-    const mp = phaseT(p, 0.15, 0.29);
-    magMesh.position.y = lerp(-0.09, -0.32, easeIn(mp));
+  if (magMesh && magMesh.visible && p>=0.15 && p<0.30) {
+    magMesh.position.y=lerp(-0.09,-0.32,easeIn(phaseT(p,0.15,0.29)));
   }
-  if (!RA.didMagOut && p >= 0.28) {
-    RA.didMagOut = true;
-    spawnEjectedMag();
+  if (!RA.didMagOut && p>=0.28) { RA.didMagOut=true; spawnEjectedMag(); beep('mag_out'); }
+
+  if (magMesh && !magMesh.visible && p>=0.40) { magMesh.position.y=-0.32; magMesh.visible=true; }
+  if (magMesh && magMesh.visible && p>=0.40 && p<0.62) {
+    magMesh.position.y=lerp(-0.32,-0.09,easeOut(phaseT(p,0.40,0.62)));
+  }
+  if (!RA.didMagIn && p>=0.60) { RA.didMagIn=true; beep('mag_in'); }
+  if (p>=0.62 && magMesh) magMesh.position.y=-0.09;
+
+  if (slideMesh && p>=0.62 && p<0.78) {
+    const p4=phaseT(p,0.62,0.78);
+    slideMesh.position.z=p4<0.5
+      ?lerp(SLIDE_DEFAULT_Z,SLIDE_DEFAULT_Z-0.10,easeOut(p4*2))
+      :lerp(SLIDE_DEFAULT_Z-0.10,SLIDE_DEFAULT_Z,easeIn((p4-0.5)*2));
+  }
+  if (!RA.didRack && p>=0.70) { RA.didRack=true; beep('rack'); }
+  if (p>=0.78 && slideMesh) slideMesh.position.z=SLIDE_DEFAULT_Z;
+
+  if (p>=1.0) {
+    RA.active=false;
+    gunGroup.rotation.z=0;
+    gunGroup.position.set(GUN_REST_X,gunBaseY,GUN_REST_Z);
+    if (magMesh)   { magMesh.position.y=-0.09; magMesh.visible=true; }
+    if (slideMesh)   slideMesh.position.z=SLIDE_DEFAULT_Z;
+  }
+}
+
+function _plasmaReloadFrame(p) {
+  if (!gun2Group) { if(p>=1) RA.active=false; return; }
+
+  // Gun tilts to reveal cell port on top, shifts slightly left
+  const p1  = phaseT(p, 0.00, 0.12);
+  const p5  = phaseT(p, 0.80, 1.00);
+  let fx, fy, frz, frx;
+  if (p <= 0.12) {
+    const t=easeInOut(p1);
+    fx=lerp(GUN_REST_X,GUN_REST_X-.06,t); fy=lerp(gunBaseY,gunBaseY-.09,t);
+    frz=lerp(0,-.20,t); frx=lerp(0,.30,t);
+  } else if (p<=0.80) {
+    fx=GUN_REST_X-.06; fy=gunBaseY-.09; frz=-.20; frx=.30;
+  } else {
+    const t=easeInOut(p5);
+    fx=lerp(GUN_REST_X-.06,GUN_REST_X,t); fy=lerp(gunBaseY-.09,gunBaseY,t);
+    frz=lerp(-.20,0,t); frx=lerp(.30,0,t);
+  }
+  gun2Group.position.x=fx; gun2Group.position.y=fy+gunRecoilY;
+  gun2Group.position.z=GUN_REST_Z;
+  gun2Group.rotation.z=frz; gun2Group.rotation.x=frx;
+
+  // Phase 2 (0.12-0.32): cell rises out of port
+  if (plasmaCell && plasmaCell.visible && p>=0.12 && p<0.32) {
+    plasmaCell.position.y=lerp(0.068,0.26,easeIn(phaseT(p,0.12,0.32)));
+  }
+  if (!RA.didCellOut && p>=0.30) {
+    RA.didCellOut=true;
+    spawnEjectedPlasmaCell();
     beep('mag_out');
   }
 
-  // Phase 3 (0.40-0.62): new mag rises in
-  if (!magMesh) { /* ejected only */ }
-  else if (!magMesh.visible && p >= 0.40) {
-    magMesh.position.y = -0.32;
-    magMesh.visible = true;
+  // Phase 3 (0.38-0.62): new cell descends from above
+  if (plasmaCell && !plasmaCell.visible && p>=0.38) { plasmaCell.position.y=0.28; plasmaCell.visible=true; }
+  if (plasmaCell && plasmaCell.visible && p>=0.38 && p<0.62) {
+    plasmaCell.position.y=lerp(0.28,0.068,easeOut(phaseT(p,0.38,0.62)));
   }
-  if (magMesh && magMesh.visible && p >= 0.40 && p < 0.62) {
-    const p3 = phaseT(p, 0.40, 0.62);
-    magMesh.position.y = lerp(-0.32, -0.09, easeOut(p3));
-  }
-  if (!RA.didMagIn && p >= 0.60) {
-    RA.didMagIn = true;
-    beep('mag_in');
-  }
-  if (p >= 0.62 && magMesh) magMesh.position.y = -0.09;
+  if (!RA.didCellIn && p>=0.60) { RA.didCellIn=true; beep('mag_in'); }
+  if (p>=0.62 && plasmaCell) plasmaCell.position.y=0.068;
 
-  // Phase 4 (0.62-0.78): slide rack
-  if (slideMesh && p >= 0.62 && p < 0.78) {
-    const p4 = phaseT(p, 0.62, 0.78);
-    const slideZ = p4 < 0.5
-      ? lerp(SLIDE_DEFAULT_Z, SLIDE_DEFAULT_Z - 0.10, easeOut(p4 * 2))
-      : lerp(SLIDE_DEFAULT_Z - 0.10, SLIDE_DEFAULT_Z, easeIn((p4 - 0.5) * 2));
-    slideMesh.position.z = slideZ;
+  // Phase 4 (0.62-0.80): barrel charges — glow pulses
+  const bg=gun2Group.getObjectByName('barrelGlow');
+  if (bg && p>=0.62 && p<0.80) {
+    const cp=phaseT(p,0.62,0.80);
+    const pulse=Math.sin(cp*Math.PI*3)*.5+.5;
+    bg.material.color.setHex(pulse>0.5?0xff5500:0x882200);
+    bg.scale.setScalar(1+pulse*.6);
   }
-  if (!RA.didRack && p >= 0.70) {
-    RA.didRack = true;
-    beep('rack');
-  }
-  if (p >= 0.78 && slideMesh) slideMesh.position.z = SLIDE_DEFAULT_Z;
+  if (!RA.didCharge && p>=0.70) { RA.didCharge=true; beep('plasma_charge'); }
+  if (bg && p>=0.80) { bg.material.color.setHex(0x331100); bg.scale.setScalar(1); }
 
-  // Done
-  if (p >= 1.0) {
-    RA.active = false;
-    gunGroup.rotation.z = 0;
-    gunGroup.position.set(GUN_REST_X, gunBaseY, GUN_REST_Z);
-    if (magMesh)  { magMesh.position.y = -0.09; magMesh.visible = true; }
-    if (slideMesh) slideMesh.position.z = SLIDE_DEFAULT_Z;
+  if (p>=1.0) {
+    RA.active=false;
+    gun2Group.rotation.set(0,-.04,0);
+    gun2Group.position.set(GUN_REST_X,gunBaseY,GUN_REST_Z);
+    if (plasmaCell) { plasmaCell.position.y=0.068; plasmaCell.visible=true; }
   }
+}
+
+function spawnEjectedPlasmaCell() {
+  if (!plasmaCell||!gun2Group) return;
+  const m=plasmaCell.clone();
+  gun2Group.updateMatrixWorld(true);
+  const wp=new THREE.Vector3();
+  plasmaCell.getWorldPosition(wp);
+  m.position.copy(wp); m.quaternion.copy(camera.quaternion);
+  scene.add(m);
+  const vel=new THREE.Vector3((Math.random()-.5)*1.4, 1.6+Math.random()*.6, (Math.random()-.5)*.5);
+  ejectedMags.push({mesh:m,vel,life:4.0,bounces:0});
+  plasmaCell.visible=false;
+  spawnBurst(wp,8,0xff5500);
+}
+
+// ===================================================================
+//  GUN 2 — PLASMA RIFLE
+// ===================================================================
+let currentGun   = 0;    // 0 = pistol  1 = plasma rifle
+let gun2Group    = null;
+let plasmaCell   = null; // energy cell mesh (like magMesh for pistol)
+const PLASMA_CLIP = 8, PLASMA_RES = 32, PLASMA_DMG = 55, PLASMA_RATE = 0.50;
+let plasmaAmmo = PLASMA_CLIP, plasmaReserve = PLASMA_RES;
+
+function buildGun2() {
+  gun2Group = new THREE.Group();
+  const body  = new THREE.MeshLambertMaterial({color:0x1a0600});
+  const hull  = new THREE.MeshLambertMaterial({color:0x3d1200});
+  const shroudMat = new THREE.MeshBasicMaterial({color:0x882200});
+  const cellMat   = new THREE.MeshBasicMaterial({color:0xff5500});
+
+  // Receiver body — wider, more angular than pistol
+  const recv=new THREE.Mesh(new THREE.BoxGeometry(.10,.09,.34),hull);
+  recv.position.set(0,.005,-.16); gun2Group.add(recv);
+
+  // Long barrel
+  const brl=new THREE.Mesh(new THREE.BoxGeometry(.048,.048,.30),body);
+  brl.position.set(0,.025,-.46); gun2Group.add(brl);
+
+  // Barrel shroud neon strips (left & right sides)
+  const shrL=new THREE.Mesh(new THREE.BoxGeometry(.006,.036,.26),shroudMat);
+  shrL.position.set(-.032,.025,-.46); gun2Group.add(shrL);
+  const shrR=new THREE.Mesh(new THREE.BoxGeometry(.006,.036,.26),shroudMat);
+  shrR.position.set( .032,.025,-.46); gun2Group.add(shrR);
+
+  // Futuristic angled grip
+  const grip=new THREE.Mesh(new THREE.BoxGeometry(.055,.13,.065),body);
+  grip.position.set(.01,-.10,-.05); grip.rotation.x=.14; gun2Group.add(grip);
+
+  // Energy cell — glowing slab on top of receiver
+  plasmaCell=new THREE.Mesh(new THREE.BoxGeometry(.065,.045,.095),cellMat);
+  plasmaCell.position.set(0,.068,-.14); gun2Group.add(plasmaCell);
+
+  // Holosite (flat angular sight)
+  const sBase=new THREE.Mesh(new THREE.BoxGeometry(.075,.02,.055),hull);
+  sBase.position.set(0,.06,-.28); gun2Group.add(sBase);
+  const sDot=new THREE.Mesh(new THREE.BoxGeometry(.024,.008,.008),
+    new THREE.MeshBasicMaterial({color:0xff2200}));
+  sDot.position.set(0,.075,-.28); gun2Group.add(sDot);
+
+  // Barrel glow tip (pulses during reload charge phase)
+  const brlGlow=new THREE.Mesh(new THREE.BoxGeometry(.038,.038,.038),
+    new THREE.MeshBasicMaterial({color:0x331100,transparent:true,opacity:.7}));
+  brlGlow.position.set(0,.025,-.62); brlGlow.name='barrelGlow'; gun2Group.add(brlGlow);
+
+  // Muzzle flash (orange)
+  const flash=new THREE.Mesh(
+    new THREE.PlaneGeometry(.24,.24),
+    new THREE.MeshBasicMaterial({color:0xff5500,side:THREE.DoubleSide,transparent:true,depthTest:false})
+  );
+  flash.position.set(0,.025,-.66); flash.name='muzzleFlash'; flash.visible=false; gun2Group.add(flash);
+
+  gun2Group.position.set(GUN_REST_X,gunBaseY,GUN_REST_Z);
+  gun2Group.rotation.y=-.04;
+  gun2Group.visible=false;
+  camera.add(gun2Group);
+}
+
+function switchGun() {
+  if (player.reloading || RA.active) return;
+  currentGun = 1 - currentGun;
+  if (gunGroup)  gunGroup.visible  = (currentGun===0);
+  if (gun2Group) gun2Group.visible = (currentGun===1);
+  const gn = document.getElementById('gun-name');
+  if (gn) gn.textContent = currentGun===0 ? 'PISTOL' : 'PLASMA';
+  refreshAmmoHUD();
+  beep('rack');
 }
 
 // ===================================================================
@@ -1094,9 +1237,13 @@ let xhairFlash = 0;
 
 function shoot() {
   if (player.reloading) return;
-  if (player.ammo<=0) { beep('empty'); startReload(); return; }
+  const myAmmo = currentGun===0 ? player.ammo : plasmaAmmo;
+  const myRate = currentGun===0 ? fireRate : PLASMA_RATE;
+  const myDmg  = currentGun===0 ? gunDamage : PLASMA_DMG;
+  if (myAmmo<=0) { beep('empty'); startReload(); return; }
   if (player.shootT>0) return;
-  player.ammo--; player.shootT=fireRate;
+  if (currentGun===0) player.ammo--; else plasmaAmmo--;
+  player.shootT=myRate;
   beep('shoot'); showMuzzleFlash(); refreshAmmoHUD();
   pitch+=.018+Math.random()*.008; pitch=Math.min(pitch,Math.PI/2.5);
 
@@ -1107,28 +1254,37 @@ function shoot() {
     while (hg.parent&&!(hg.parent instanceof THREE.Scene)) hg=hg.parent;
     const z=enemies.find(e=>e.group===hg);
     if (z&&!z.dead) {
-      z.hp-=gunDamage; z.stagger=.18;
-      beep('hit'); spawnBurst(hits[0].point,6,0x44ff22); flashXhair();
+      z.hp-=myDmg; z.stagger=.18;
+      beep('hit'); spawnBurst(hits[0].point,6,currentGun===0?0x44ff22:0xff5500); flashXhair();
       if (z.hp<=0) killZombie(z);
     }
   }
   const dir=new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion);
   spawnTracer(camera.position.clone().addScaledVector(dir,.8),dir);
-  if (player.ammo===0&&!player.reloading) startReload();
+  const curAmmo=currentGun===0?player.ammo:plasmaAmmo;
+  if (curAmmo===0&&!player.reloading) startReload();
 }
 
 function flashXhair() { document.getElementById('xhair').classList.add('hit'); xhairFlash=.15; }
 
 function startReload() {
-  if (player.reloading||player.reserve<=0||player.ammo===maxClip) return;
-  player.reloading=true; player.reloadT=RELOAD_T*shopReloadMult;
+  const myAmmo=currentGun===0?player.ammo:plasmaAmmo;
+  const myRes =currentGun===0?player.reserve:plasmaReserve;
+  const myClip=currentGun===0?maxClip:PLASMA_CLIP;
+  if (player.reloading||myRes<=0||myAmmo===myClip) return;
+  player.reloading=true; player.reloadT=RELOAD_T*shopReloadMult*(currentGun===0?1:1.3);
   startReloadAnim();
   document.getElementById('reload-msg').style.display='block';
 }
 
 function finishReload() {
-  const take=Math.min(maxClip-player.ammo,player.reserve);
-  player.ammo+=take; player.reserve-=take;
+  if (currentGun===0) {
+    const take=Math.min(maxClip-player.ammo,player.reserve);
+    player.ammo+=take; player.reserve-=take;
+  } else {
+    const take=Math.min(PLASMA_CLIP-plasmaAmmo,plasmaReserve);
+    plasmaAmmo+=take; plasmaReserve-=take;
+  }
   player.reloading=false;
   document.getElementById('reload-msg').style.display='none';
   refreshAmmoHUD();
@@ -1210,8 +1366,12 @@ function refreshHealthHUD() {
   document.getElementById('hp-text').textContent=Math.ceil(player.hp);
 }
 function refreshAmmoHUD() {
-  document.getElementById('ammo-cur').textContent=player.ammo;
-  document.getElementById('ammo-res').textContent=player.reserve;
+  const a=currentGun===0?player.ammo:plasmaAmmo;
+  const r=currentGun===0?player.reserve:plasmaReserve;
+  document.getElementById('ammo-cur').textContent=a;
+  document.getElementById('ammo-res').textContent=r;
+  const gn=document.getElementById('gun-name');
+  if (gn) gn.textContent=currentGun===0?'PISTOL':'PLASMA';
 }
 function refreshScoreHUD()  { document.getElementById('score-val').textContent=score; }
 function refreshCoinsHUD()  { document.getElementById('coins-val').textContent=coins; }
@@ -1251,10 +1411,15 @@ function startGame() {
   for (const p of particles) scene.remove(p.mesh); particles.length=0;
   for (const t of tracers) scene.remove(t.line); tracers.length=0;
   for (const em of ejectedMags) scene.remove(em.mesh); ejectedMags.length=0;
-  RA.active=false;
-  if (gunGroup) { gunGroup.position.set(GUN_REST_X,gunBaseY,GUN_REST_Z); gunGroup.rotation.z=0; }
-  if (magMesh)  { magMesh.position.y=-0.09; magMesh.visible=true; }
-  if (slideMesh) slideMesh.position.z=SLIDE_DEFAULT_Z;
+  RA.active=false; RA.gun=0;
+  currentGun=0;
+  plasmaAmmo=PLASMA_CLIP; plasmaReserve=PLASMA_RES;
+  if (gunGroup)  { gunGroup.position.set(GUN_REST_X,gunBaseY,GUN_REST_Z); gunGroup.rotation.z=0; gunGroup.visible=true; }
+  if (gun2Group) { gun2Group.position.set(GUN_REST_X,gunBaseY,GUN_REST_Z); gun2Group.rotation.set(0,-.04,0); gun2Group.visible=false; }
+  if (magMesh)   { magMesh.position.y=-0.09; magMesh.visible=true; }
+  if (plasmaCell){ plasmaCell.position.y=0.068; plasmaCell.visible=true; }
+  if (slideMesh)  slideMesh.position.z=SLIDE_DEFAULT_Z;
+  const gnEl=document.getElementById('gun-name'); if(gnEl) gnEl.textContent='PISTOL';
 
   // UI state
   document.getElementById('start-screen').style.display='none';
@@ -1331,7 +1496,10 @@ function updatePlayer(dt) {
   if (player.reloading) { player.reloadT-=dt; if (player.reloadT<=0) finishReload(); }
 
   gunRecoilY+=(-gunRecoilY)*Math.min(1,dt*18);
-  if (gunGroup && !RA.active) gunGroup.position.y=gunBaseY+gunRecoilY;
+  if (!RA.active) {
+    if (gunGroup)  gunGroup.position.y=gunBaseY+gunRecoilY;
+    if (gun2Group) gun2Group.position.y=gunBaseY+gunRecoilY;
+  }
 }
 
 // ===================================================================
@@ -1373,7 +1541,7 @@ function loop(ts) {
       tr.line.material.opacity=Math.max(0,tr.life/.06);
       if (tr.life<=0) { scene.remove(tr.line); tracers.splice(i,1); }
     }
-    if (muzzleTimer>0) { muzzleTimer-=dt; if (muzzleTimer<=0){const f=gunGroup&&gunGroup.getObjectByName('muzzleFlash');if(f)f.visible=false;} }
+    if (muzzleTimer>0) { muzzleTimer-=dt; if (muzzleTimer<=0){const ag=currentGun===0?gunGroup:gun2Group;const f=ag&&ag.getObjectByName('muzzleFlash');if(f)f.visible=false;} }
     if (xhairFlash>0) { xhairFlash-=dt; if (xhairFlash<=0) document.getElementById('xhair').classList.remove('hit'); }
     updateReloadAnim(dt);
     for (let i=ejectedMags.length-1;i>=0;i--) {
@@ -1399,6 +1567,7 @@ function setupDesktopInput() {
   document.addEventListener('keydown', e=>{
     keys.add(e.code);
     if (e.code==='KeyR'&&gState==='playing') startReload();
+    if (e.code==='KeyG'&&gState==='playing') switchGun();
   });
   document.addEventListener('keyup', e=>keys.delete(e.code));
   document.addEventListener('mousedown', e=>{ if (e.button===0&&locked&&gState==='playing'){shooting=true;shoot();} });
@@ -1490,6 +1659,7 @@ buildWorld();
 buildSkybox();
 rainMesh = buildRain();
 buildGun();
+buildGun2();
 setupDesktopInput();
 setupTouchInput();
 attachPlay('start-btn');

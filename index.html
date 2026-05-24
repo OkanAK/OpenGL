@@ -199,7 +199,6 @@ canvas { display:block; }
   color:#fff; font-size:11px; font-family:'Courier New',monospace; font-weight:bold;
   -webkit-tap-highlight-color:transparent;
 }
-#btn-shoot  { width:86px; height:86px; bottom:26px; right:22px; background:rgba(200,30,30,.6);  border:3px solid rgba(255,80,80,.8); }
 #btn-jump   { width:60px; height:60px; bottom:132px; right:32px; background:rgba(40,90,210,.5); border:2px solid rgba(80,140,255,.75); }
 #btn-reload { width:60px; height:60px; bottom:132px; right:108px; background:rgba(160,120,0,.5); border:2px solid rgba(255,195,0,.75); }
 </style>
@@ -213,7 +212,7 @@ canvas { display:block; }
   <div class="ctrl-grid" id="ctrl-kb">
     <span class="k">W A S D</span><span class="d">Move</span>
     <span class="k">MOUSE</span><span class="d">Aim</span>
-    <span class="k">CLICK</span><span class="d">Shoot</span>
+    <span class="k">AIM AT ZOMBIE</span><span class="d">Auto-fire</span>
     <span class="k">R</span><span class="d">Reload</span>
     <span class="k">G</span><span class="d">Switch Gun</span>
     <span class="k">SPACE</span><span class="d">Jump</span>
@@ -222,7 +221,7 @@ canvas { display:block; }
   <div class="ctrl-grid" id="ctrl-touch">
     <span class="k">LEFT THUMB</span><span class="d">Move</span>
     <span class="k">RIGHT SWIPE</span><span class="d">Aim</span>
-    <span class="k">FIRE</span><span class="d">Shoot</span>
+    <span class="k">AIM AT ZOMBIE</span><span class="d">Auto-fire</span>
     <span class="k">JUMP / RELOAD</span><span class="d">Buttons</span>
   </div>
   <button class="btn" id="start-btn">PLAY</button>
@@ -281,7 +280,6 @@ canvas { display:block; }
 <div id="touch-ui">
   <div id="joy-zone"><div id="joy-base"><div id="joy-knob"></div></div></div>
   <div id="look-zone"></div>
-  <div id="btn-shoot" class="tc-btn">FIRE</div>
   <div id="btn-jump"  class="tc-btn">JUMP</div>
   <div id="btn-reload" class="tc-btn">RLD</div>
 </div>
@@ -1638,6 +1636,15 @@ function updatePlayer(dt) {
   camera.position.x=player.pos.x; camera.position.z=player.pos.z;
 
   if (player.shootT>0) player.shootT-=dt;
+  // Auto-fire: shoot whenever crosshair is on a live zombie
+  const _alive = enemies.filter(e=>!e.dead);
+  if (_alive.length>0) {
+    const _rc = new THREE.Raycaster();
+    _rc.setFromCamera(new THREE.Vector2(0,0), camera);
+    shooting = _rc.intersectObjects(_alive.map(e=>e.group), true).length > 0;
+  } else {
+    shooting = false;
+  }
   if (shooting&&player.shootT<=0&&!player.reloading) shoot();
   if (player.reloading) { player.reloadT-=dt; if (player.reloadT<=0) finishReload(); }
 
@@ -1716,8 +1723,6 @@ function setupDesktopInput() {
     if (e.code==='KeyG'&&gState==='playing') switchGun();
   });
   document.addEventListener('keyup', e=>keys.delete(e.code));
-  document.addEventListener('mousedown', e=>{ if (e.button===0&&locked&&gState==='playing'){shooting=true;shoot();} });
-  document.addEventListener('mouseup',   e=>{ if (e.button===0) shooting=false; });
   document.addEventListener('mousemove', e=>{
     if (!locked) return;
     yaw-=e.movementX*.0018; pitch-=e.movementY*.0018;
@@ -1770,11 +1775,6 @@ function setupTouchInput() {
   const lookEnd=e=>{ for (const t of e.changedTouches) if (t.identifier===tl.id){tl.active=false;tl.id=-1;} };
   lookZone.addEventListener('touchend',lookEnd,{passive:false});
   lookZone.addEventListener('touchcancel',lookEnd,{passive:false});
-
-  const bs=document.getElementById('btn-shoot');
-  bs.addEventListener('touchstart',e=>{ e.preventDefault(); if(gState==='playing'){shooting=true;shoot();} },{passive:false});
-  bs.addEventListener('touchend',  e=>{ e.preventDefault(); shooting=false; },{passive:false});
-  bs.addEventListener('touchcancel',e=>{ e.preventDefault(); shooting=false; },{passive:false});
 
   const bj=document.getElementById('btn-jump');
   bj.addEventListener('touchstart',e=>{ e.preventDefault(); keys.add('Space'); },{passive:false});

@@ -514,6 +514,23 @@ function beep(type) {
       o.type='square'; o.frequency.setValueAtTime(280,t); o.frequency.setValueAtTime(180,t+.06);
       g.gain.setValueAtTime(.1,t); g.gain.exponentialRampToValueAtTime(.001,t+.12);
       o.start(t); o.stop(t+.12);
+    } else if (type === 'mag_out') {
+      o.type='square'; o.frequency.setValueAtTime(220,t); o.frequency.exponentialRampToValueAtTime(75,t+.14);
+      g.gain.setValueAtTime(.1,t); g.gain.exponentialRampToValueAtTime(.001,t+.16);
+      o.start(t); o.stop(t+.16);
+    } else if (type === 'mag_in') {
+      o.type='square'; o.frequency.setValueAtTime(380,t); o.frequency.setValueAtTime(180,t+.04);
+      g.gain.setValueAtTime(.14,t); g.gain.exponentialRampToValueAtTime(.001,t+.12);
+      o.start(t); o.stop(t+.12);
+    } else if (type === 'rack') {
+      o.type='sawtooth'; o.frequency.setValueAtTime(190,t); o.frequency.exponentialRampToValueAtTime(65,t+.07);
+      g.gain.setValueAtTime(.16,t); g.gain.exponentialRampToValueAtTime(.001,t+.09);
+      o.start(t); o.stop(t+.09);
+      const o2=ctx.createOscillator(), g2=ctx.createGain();
+      o2.connect(g2); g2.connect(ctx.destination);
+      o2.type='sawtooth'; o2.frequency.setValueAtTime(230,t+.12); o2.frequency.exponentialRampToValueAtTime(80,t+.19);
+      g2.gain.setValueAtTime(.15,t+.12); g2.gain.exponentialRampToValueAtTime(.001,t+.21);
+      o2.start(t+.12); o2.stop(t+.21);
     } else if (type === 'empty') {
       o.type='square'; o.frequency.setValueAtTime(90,t);
       g.gain.setValueAtTime(.1,t); g.gain.exponentialRampToValueAtTime(.001,t+.06);
@@ -598,6 +615,16 @@ function buildWorld() {
 //  GUN MODEL
 // ===================================================================
 let gunGroup, gunBaseY = -.22, gunRecoilY = 0;
+let magMesh = null, slideMesh = null;
+const SLIDE_DEFAULT_Z = -.08;
+
+// ---- Reload animation helpers ----------------------------------
+function lerp(a,b,t)       { return a+(b-a)*t; }
+function easeIn(t)         { return t*t; }
+function easeOut(t)        { return 1-(1-t)*(1-t); }
+function easeInOut(t)      { return t<.5?2*t*t:-1+(4-2*t)*t; }
+function clamp01(t)        { return Math.max(0,Math.min(1,t)); }
+function phaseT(t,s,e)     { return clamp01((t-s)/(e-s)); }
 
 function buildGun() {
   gunGroup = new THREE.Group();
@@ -605,11 +632,14 @@ function buildGun() {
   const mid =new THREE.MeshLambertMaterial({color:0x3a3a55});
   const acc =new THREE.MeshLambertMaterial({color:0x556688});
 
-  const recv=new THREE.Mesh(new THREE.BoxGeometry(.085,.10,.30),dark); recv.position.set(0,0,-.15); gunGroup.add(recv);
-  const brl =new THREE.Mesh(new THREE.BoxGeometry(.038,.038,.28),mid);  brl.position.set(0,.03,-.38);  gunGroup.add(brl);
+  const recv=new THREE.Mesh(new THREE.BoxGeometry(.085,.10,.30),dark); recv.position.set(0,0,-.15);    gunGroup.add(recv);
+  const brl =new THREE.Mesh(new THREE.BoxGeometry(.038,.038,.28),mid);  brl.position.set(0,.03,-.38);   gunGroup.add(brl);
   const sght=new THREE.Mesh(new THREE.BoxGeometry(.01,.04,.01),acc);    sght.position.set(0,.055,-.48); gunGroup.add(sght);
   const grip=new THREE.Mesh(new THREE.BoxGeometry(.06,.16,.08),dark);   grip.position.set(0,-.12,-.04); grip.rotation.x=.18; gunGroup.add(grip);
-  const mag =new THREE.Mesh(new THREE.BoxGeometry(.05,.11,.055),mid);   mag.position.set(0,-.09,-.13);  gunGroup.add(mag);
+  // Magazine (stored for reload animation)
+  magMesh=new THREE.Mesh(new THREE.BoxGeometry(.05,.11,.055),mid); magMesh.position.set(0,-.09,-.13); gunGroup.add(magMesh);
+  // Charging slide on top of receiver
+  slideMesh=new THREE.Mesh(new THREE.BoxGeometry(.04,.03,.12),acc); slideMesh.position.set(.04,.055,SLIDE_DEFAULT_Z); gunGroup.add(slideMesh);
 
   const flash=new THREE.Mesh(
     new THREE.PlaneGeometry(.22,.22),
@@ -626,6 +656,125 @@ function showMuzzleFlash() {
   const f=gunGroup.getObjectByName('muzzleFlash');
   if (f) { f.visible=true; f.rotation.z=Math.random()*Math.PI; }
   muzzleTimer=.055; gunRecoilY=.035;
+}
+
+// ===================================================================
+//  RELOAD ANIMATION
+// ===================================================================
+const GUN_REST_X = 0.24, GUN_REST_Z = -0.38;
+const RA = { active:false, t:0, dur:2.0, didMagOut:false, didMagIn:false, didRack:false };
+const ejectedMags = [];
+
+function startReloadAnim() {
+  RA.active    = true;
+  RA.t         = 0;
+  RA.dur       = RELOAD_T * shopReloadMult;
+  RA.didMagOut = false;
+  RA.didMagIn  = false;
+  RA.didRack   = false;
+  if (magMesh) magMesh.visible = true;
+}
+
+function spawnEjectedMag() {
+  if (!magMesh || !gunGroup) return;
+  const m = magMesh.clone();
+  gunGroup.updateMatrixWorld(true);
+  const wp = new THREE.Vector3();
+  magMesh.getWorldPosition(wp);
+  m.position.copy(wp);
+  m.quaternion.copy(camera.quaternion);
+  scene.add(m);
+  const vel = new THREE.Vector3(
+    (Math.random() - .5) * 1.2,
+    -1.0 + Math.random() * .5,
+    (Math.random() - .5) * .5
+  );
+  ejectedMags.push({ mesh:m, vel, life:4.0, bounces:0 });
+  magMesh.visible = false;
+}
+
+function updateReloadAnim(dt) {
+  if (!RA.active || !gunGroup) return;
+  RA.t = Math.min(RA.t + dt, RA.dur);
+  const p = RA.t / RA.dur;
+
+  // Phase 1 (0.00-0.15): swing gun inward/down
+  const p1  = phaseT(p, 0.00, 0.15);
+  const xe1 = easeInOut(p1);
+
+  // Phase 5 (0.78-1.00): return to rest
+  const p5  = phaseT(p, 0.78, 1.00);
+  const xe5 = easeInOut(p5);
+
+  let finalX, finalY, finalRz;
+  if (p <= 0.15) {
+    finalX  = lerp(GUN_REST_X, 0.05, xe1);
+    finalY  = lerp(gunBaseY, gunBaseY - 0.14, xe1);
+    finalRz = lerp(0, 0.28, xe1);
+  } else if (p <= 0.78) {
+    finalX  = 0.05;
+    finalY  = gunBaseY - 0.14;
+    finalRz = 0.28;
+  } else {
+    finalX  = lerp(0.05, GUN_REST_X, xe5);
+    finalY  = lerp(gunBaseY - 0.14, gunBaseY, xe5);
+    finalRz = lerp(0.28, 0, xe5);
+  }
+
+  gunGroup.position.x = finalX;
+  gunGroup.position.y = finalY + gunRecoilY;
+  gunGroup.position.z = GUN_REST_Z;
+  gunGroup.rotation.z = finalRz;
+
+  // Phase 2 (0.15-0.28): mag slides out
+  if (magMesh && magMesh.visible && p >= 0.15 && p < 0.30) {
+    const mp = phaseT(p, 0.15, 0.29);
+    magMesh.position.y = lerp(-0.09, -0.32, easeIn(mp));
+  }
+  if (!RA.didMagOut && p >= 0.28) {
+    RA.didMagOut = true;
+    spawnEjectedMag();
+    beep('mag_out');
+  }
+
+  // Phase 3 (0.40-0.62): new mag rises in
+  if (!magMesh) { /* ejected only */ }
+  else if (!magMesh.visible && p >= 0.40) {
+    magMesh.position.y = -0.32;
+    magMesh.visible = true;
+  }
+  if (magMesh && magMesh.visible && p >= 0.40 && p < 0.62) {
+    const p3 = phaseT(p, 0.40, 0.62);
+    magMesh.position.y = lerp(-0.32, -0.09, easeOut(p3));
+  }
+  if (!RA.didMagIn && p >= 0.60) {
+    RA.didMagIn = true;
+    beep('mag_in');
+  }
+  if (p >= 0.62 && magMesh) magMesh.position.y = -0.09;
+
+  // Phase 4 (0.62-0.78): slide rack
+  if (slideMesh && p >= 0.62 && p < 0.78) {
+    const p4 = phaseT(p, 0.62, 0.78);
+    const slideZ = p4 < 0.5
+      ? lerp(SLIDE_DEFAULT_Z, SLIDE_DEFAULT_Z - 0.10, easeOut(p4 * 2))
+      : lerp(SLIDE_DEFAULT_Z - 0.10, SLIDE_DEFAULT_Z, easeIn((p4 - 0.5) * 2));
+    slideMesh.position.z = slideZ;
+  }
+  if (!RA.didRack && p >= 0.70) {
+    RA.didRack = true;
+    beep('rack');
+  }
+  if (p >= 0.78 && slideMesh) slideMesh.position.z = SLIDE_DEFAULT_Z;
+
+  // Done
+  if (p >= 1.0) {
+    RA.active = false;
+    gunGroup.rotation.z = 0;
+    gunGroup.position.set(GUN_REST_X, gunBaseY, GUN_REST_Z);
+    if (magMesh)  { magMesh.position.y = -0.09; magMesh.visible = true; }
+    if (slideMesh) slideMesh.position.z = SLIDE_DEFAULT_Z;
+  }
 }
 
 // ===================================================================
@@ -823,7 +972,8 @@ function flashXhair() { document.getElementById('xhair').classList.add('hit'); x
 function startReload() {
   if (player.reloading||player.reserve<=0||player.ammo===maxClip) return;
   player.reloading=true; player.reloadT=RELOAD_T*shopReloadMult;
-  beep('reload'); document.getElementById('reload-msg').style.display='block';
+  startReloadAnim();
+  document.getElementById('reload-msg').style.display='block';
 }
 
 function finishReload() {
@@ -939,6 +1089,11 @@ function startGame() {
   ebarContainer.innerHTML='';
   for (const p of particles) scene.remove(p.mesh); particles.length=0;
   for (const t of tracers) scene.remove(t.line); tracers.length=0;
+  for (const em of ejectedMags) scene.remove(em.mesh); ejectedMags.length=0;
+  RA.active=false;
+  if (gunGroup) { gunGroup.position.set(GUN_REST_X,gunBaseY,GUN_REST_Z); gunGroup.rotation.z=0; }
+  if (magMesh)  { magMesh.position.y=-0.09; magMesh.visible=true; }
+  if (slideMesh) slideMesh.position.z=SLIDE_DEFAULT_Z;
 
   // UI state
   document.getElementById('start-screen').style.display='none';
@@ -1015,7 +1170,7 @@ function updatePlayer(dt) {
   if (player.reloading) { player.reloadT-=dt; if (player.reloadT<=0) finishReload(); }
 
   gunRecoilY+=(-gunRecoilY)*Math.min(1,dt*18);
-  if (gunGroup) gunGroup.position.y=gunBaseY+gunRecoilY;
+  if (gunGroup && !RA.active) gunGroup.position.y=gunBaseY+gunRecoilY;
 }
 
 // ===================================================================
@@ -1042,6 +1197,18 @@ function loop(ts) {
     }
     if (muzzleTimer>0) { muzzleTimer-=dt; if (muzzleTimer<=0){const f=gunGroup&&gunGroup.getObjectByName('muzzleFlash');if(f)f.visible=false;} }
     if (xhairFlash>0) { xhairFlash-=dt; if (xhairFlash<=0) document.getElementById('xhair').classList.remove('hit'); }
+    updateReloadAnim(dt);
+    for (let i=ejectedMags.length-1;i>=0;i--) {
+      const em=ejectedMags[i]; em.life-=dt;
+      em.vel.y-=9*dt;
+      em.mesh.position.addScaledVector(em.vel,dt);
+      em.mesh.rotation.x+=em.vel.length()*dt*4;
+      if (em.mesh.position.y<=0.03&&em.vel.y<0) {
+        em.vel.y*=-.38; em.vel.x*=.75; em.vel.z*=.75; em.bounces++;
+        if (em.bounces>3) em.vel.set(0,0,0);
+      }
+      if (em.life<=0) { scene.remove(em.mesh); ejectedMags.splice(i,1); }
+    }
   }
 
   renderer.render(scene,camera);

@@ -118,10 +118,18 @@ canvas { display:block; }
 #shop-coins-label { color:#aaa; font-size:13px; letter-spacing:2px; }
 #shop-coins-val { color:#ffd700; font-size:clamp(22px,5vw,32px); font-weight:bold; }
 
-#shop-grid {
+/* shop groups replace the flat grid */
+.shop-group { width:100%; max-width:780px; margin-bottom:22px; }
+.shop-group-header {
+  font-size:10px; letter-spacing:4px; font-weight:bold;
+  padding:0 0 6px; margin-bottom:10px;
+  border-bottom:2px solid var(--gc,#666);
+  color:var(--gc,#666);
+}
+.shop-group-grid {
   display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
-  gap:10px; width:100%; max-width:780px; margin-bottom:20px;
+  grid-template-columns:repeat(auto-fill,minmax(155px,1fr));
+  gap:10px;
 }
 
 .shop-card {
@@ -221,7 +229,7 @@ canvas { display:block; }
       <span id="shop-coins-val">0</span>
     </div>
   </div>
-  <div id="shop-grid"></div>
+  <div id="shop-groups"></div>
   <button id="shop-continue">NEXT WAVE &rarr;</button>
 </div>
 
@@ -336,15 +344,33 @@ let eidCounter = 0;
 // ===================================================================
 const shopBuys = {};
 
-const SHOP_ITEMS = [
-  { id:'health',   name:'MED KIT',      desc:'Restore +50 HP',          cost:100, maxBuys:6,  ac:'#cc3333' },
-  { id:'maxhp',    name:'FORTIFY',      desc:'+25 max health',           cost:200, maxBuys:4,  ac:'#cc3333' },
-  { id:'damage',   name:'HOLLOW POINT', desc:'+15 bullet damage',        cost:175, maxBuys:5,  ac:'#ff8800' },
-  { id:'firerate', name:'RAPID FIRE',   desc:'20% faster fire rate',     cost:225, maxBuys:3,  ac:'#ff8800' },
-  { id:'clip',     name:'EXT. MAG',     desc:'+10 clip capacity',        cost:175, maxBuys:3,  ac:'#ff8800' },
-  { id:'ammo',     name:'AMMO CRATE',   desc:'+60 reserve ammo',         cost:75,  maxBuys:99, ac:'#ff8800' },
-  { id:'speed',    name:'ADRENALINE',   desc:'+15% move speed',          cost:200, maxBuys:3,  ac:'#4488ff' },
-  { id:'reload',   name:'SPEED LOADER', desc:'25% faster reload',        cost:200, maxBuys:2,  ac:'#4488ff' },
+const SHOP_GROUPS = [
+  {
+    label: 'HEALTH',
+    color: '#cc3333',
+    items: [
+      { id:'health', name:'MED KIT',  desc:'Restore +50 HP',   cost:100, maxBuys:6 },
+      { id:'maxhp',  name:'FORTIFY',  desc:'+25 max health',   cost:200, maxBuys:4 },
+    ],
+  },
+  {
+    label: 'WEAPONS',
+    color: '#ff8800',
+    items: [
+      { id:'damage',   name:'HOLLOW POINT', desc:'+15 bullet damage',    cost:175, maxBuys:5  },
+      { id:'firerate', name:'RAPID FIRE',   desc:'20% faster fire rate', cost:225, maxBuys:3  },
+      { id:'clip',     name:'EXT. MAG',     desc:'+10 clip capacity',    cost:175, maxBuys:3  },
+      { id:'ammo',     name:'AMMO CRATE',   desc:'+60 reserve ammo',     cost:75,  maxBuys:99 },
+    ],
+  },
+  {
+    label: 'MOVEMENT',
+    color: '#4488ff',
+    items: [
+      { id:'speed',  name:'ADRENALINE',   desc:'+15% move speed',     cost:200, maxBuys:3 },
+      { id:'reload', name:'SPEED LOADER', desc:'25% faster reload',   cost:200, maxBuys:2 },
+    ],
+  },
 ];
 
 let shopReloadMult = 1.0; // tracks reload speed upgrade
@@ -360,40 +386,58 @@ function applyUpgrade(id) {
   if (id === 'reload')   { shopReloadMult *= 0.75; }
 }
 
+function makeCard(item, groupColor) {
+  const bought = shopBuys[item.id] || 0;
+  const maxed  = bought >= item.maxBuys;
+  const broke  = coins < item.cost;
+
+  const card = document.createElement('div');
+  card.className = 'shop-card' + (maxed ? ' maxed' : broke ? ' broke' : '');
+  card.style.setProperty('--ac', groupColor);
+
+  const ownedStr = item.maxBuys < 99
+    ? `<div class="sc-owned">${bought}/${item.maxBuys}</div>` : '';
+
+  card.innerHTML = `
+    <div class="sc-name">${item.name}</div>
+    <div class="sc-desc">${item.desc}</div>
+    <div class="sc-cost">${item.cost} coins</div>
+    ${ownedStr}`;
+
+  if (!maxed && !broke) {
+    card.addEventListener('click', () => {
+      coins -= item.cost;
+      shopBuys[item.id] = (shopBuys[item.id] || 0) + 1;
+      applyUpgrade(item.id);
+      beep('buy');
+      card.classList.add('flash');
+      renderShopItems();
+    });
+  }
+  return card;
+}
+
 function renderShopItems() {
-  const grid = document.getElementById('shop-grid');
-  grid.innerHTML = '';
+  const container = document.getElementById('shop-groups');
+  container.innerHTML = '';
   document.getElementById('shop-coins-val').textContent = coins;
 
-  for (const item of SHOP_ITEMS) {
-    const bought  = shopBuys[item.id] || 0;
-    const maxed   = bought >= item.maxBuys;
-    const broke   = coins < item.cost;
+  for (const group of SHOP_GROUPS) {
+    const section = document.createElement('div');
+    section.className = 'shop-group';
 
-    const card = document.createElement('div');
-    card.className = 'shop-card' + (maxed ? ' maxed' : broke ? ' broke' : '');
-    card.style.setProperty('--ac', item.ac);
+    const header = document.createElement('div');
+    header.className = 'shop-group-header';
+    header.style.setProperty('--gc', group.color);
+    header.textContent = group.label;
+    section.appendChild(header);
 
-    const ownedStr = item.maxBuys < 99
-      ? `<div class="sc-owned">${bought}/${item.maxBuys}</div>` : '';
+    const grid = document.createElement('div');
+    grid.className = 'shop-group-grid';
+    for (const item of group.items) grid.appendChild(makeCard(item, group.color));
+    section.appendChild(grid);
 
-    card.innerHTML = `
-      <div class="sc-name">${item.name}</div>
-      <div class="sc-desc">${item.desc}</div>
-      <div class="sc-cost">${item.cost} coins</div>
-      ${ownedStr}`;
-
-    if (!maxed && !broke) {
-      card.addEventListener('click', () => {
-        coins -= item.cost;
-        shopBuys[item.id] = (shopBuys[item.id] || 0) + 1;
-        applyUpgrade(item.id);
-        beep('buy');
-        card.classList.add('flash');
-        renderShopItems();
-      });
-    }
-    grid.appendChild(card);
+    container.appendChild(section);
   }
 }
 

@@ -286,8 +286,8 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 document.body.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x060a06);
-scene.fog = new THREE.FogExp2(0x060a06, isMobile ? 0.033 : 0.026);
+scene.background = new THREE.Color(0x020008);
+scene.fog = new THREE.FogExp2(0x020008, isMobile ? 0.028 : 0.022);
 
 const camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 0.05, 200);
 scene.add(camera);
@@ -558,19 +558,17 @@ function beep(type) {
 //  WORLD
 // ===================================================================
 function buildWorld() {
-  const mFloor = new THREE.MeshLambertMaterial({ color:0x0d1a0d });
-  const mCeil  = new THREE.MeshLambertMaterial({ color:0x080e08, side:THREE.BackSide });
-  const mWall  = new THREE.MeshLambertMaterial({ color:0x111e11 });
-  const mBox   = new THREE.MeshLambertMaterial({ color:0x162216 });
-  const mBoxAc = new THREE.MeshLambertMaterial({ color:0x1e301e });
+  // Wet dark concrete floor
+  const mFloor = new THREE.MeshLambertMaterial({ color:0x070710 });
+  const mWall  = new THREE.MeshLambertMaterial({ color:0x0a0a18 });
+  const mBox   = new THREE.MeshLambertMaterial({ color:0x0d0d20 });
+  const mBoxAc = new THREE.MeshLambertMaterial({ color:0x14102a });
 
   const floor = new THREE.Mesh(new THREE.PlaneGeometry(ARENA*2,ARENA*2,22,22), mFloor);
   floor.rotation.x = -Math.PI/2; floor.receiveShadow=true; scene.add(floor);
-  scene.add(new THREE.GridHelper(ARENA*2, 22, 0x142014, 0x142014));
+  scene.add(new THREE.GridHelper(ARENA*2, 22, 0x0a0a30, 0x0a0a30));
 
-  const ceil = new THREE.Mesh(new THREE.PlaneGeometry(ARENA*2,ARENA*2), mCeil);
-  ceil.position.y=WALL_H; ceil.rotation.x=Math.PI/2; scene.add(ceil);
-
+  // No ceiling — open to the cyberpunk sky
   for (const [p,ry,sz] of [
     [[0,WALL_H/2,-ARENA],0,[ARENA*2,WALL_H]],
     [[0,WALL_H/2, ARENA],Math.PI,[ARENA*2,WALL_H]],
@@ -581,8 +579,27 @@ function buildWorld() {
     m.position.set(...p); m.rotation.y=ry; m.receiveShadow=true; scene.add(m);
   }
 
-  for (const [x,z] of [[0,-ARENA+.2],[0,ARENA-.2],[-ARENA+.2,0],[ARENA-.2,0]]) {
-    const pl=new THREE.PointLight(0x003300,3,18); pl.position.set(x,.08,z); scene.add(pl);
+  // Neon strip lights along base of walls: alternating cyan / magenta
+  const neonColors = [0x00ffcc, 0xff00aa, 0x00aaff, 0xcc00ff];
+  for (const [[x,z],ci] of [[[0,-ARENA+.2],0],[[0,ARENA-.2],1],[[-ARENA+.2,0],2],[[ARENA-.2,0],3]]) {
+    const pl=new THREE.PointLight(neonColors[ci], 4, 22); pl.position.set(x,.12,z); scene.add(pl);
+  }
+
+  // Neon emissive edge trim on walls (thin glowing strip at top)
+  const neonTrimMats = [
+    new THREE.MeshBasicMaterial({color:0x00ffcc}),
+    new THREE.MeshBasicMaterial({color:0xff00aa}),
+    new THREE.MeshBasicMaterial({color:0x00aaff}),
+    new THREE.MeshBasicMaterial({color:0xcc00ff}),
+  ];
+  for (const [[p,ry,sz],ci] of [
+    [[[0,WALL_H,-ARENA],0,[ARENA*2]],0],
+    [[[0,WALL_H, ARENA],Math.PI,[ARENA*2]],1],
+    [[[-ARENA,WALL_H,0],Math.PI/2,[ARENA*2]],2],
+    [[[ARENA,WALL_H,0],-Math.PI/2,[ARENA*2]],3],
+  ]) {
+    const trim=new THREE.Mesh(new THREE.BoxGeometry(sz[0],.06,.06), neonTrimMats[ci]);
+    trim.position.set(...p); trim.rotation.y=ry; scene.add(trim);
   }
 
   for (const [x,z,w,d,h] of [
@@ -594,22 +611,155 @@ function buildWorld() {
     const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d), h>1.8?mBox:mBoxAc);
     mesh.position.set(x,h/2,z); mesh.castShadow=true; mesh.receiveShadow=true; scene.add(mesh);
     obstacles.push({ min:new THREE.Vector3(x-w/2,0,z-d/2), max:new THREE.Vector3(x+w/2,h,z+d/2) });
+    // Neon top edge on taller obstacles
+    if (h>1.8) {
+      const edgeMat=new THREE.MeshBasicMaterial({color:(x+z)%18===0?0x00ffcc:0xff00aa});
+      const edge=new THREE.Mesh(new THREE.BoxGeometry(w+.02,.05,d+.02),edgeMat);
+      edge.position.set(x,h+.025,z); scene.add(edge);
+    }
   }
 
-  scene.add(new THREE.AmbientLight(0x112211, 2.2));
-  const sun=new THREE.DirectionalLight(0xffffff,1.0);
-  sun.position.set(4,10,6); sun.castShadow=!isMobile;
+  // Cold ambient + dim blue moon light
+  scene.add(new THREE.AmbientLight(0x080820, 3.5));
+  const moon=new THREE.DirectionalLight(0x2244aa, 0.6);
+  moon.position.set(-6,18,-4); moon.castShadow=!isMobile;
   if (!isMobile) {
-    sun.shadow.camera.left=-28; sun.shadow.camera.right=28;
-    sun.shadow.camera.top=28; sun.shadow.camera.bottom=-28;
-    sun.shadow.mapSize.setScalar(1024);
+    moon.shadow.camera.left=-28; moon.shadow.camera.right=28;
+    moon.shadow.camera.top=28; moon.shadow.camera.bottom=-28;
+    moon.shadow.mapSize.setScalar(1024);
   }
-  scene.add(sun);
+  scene.add(moon);
 
-  for (const [cx,cz] of [[-18,-18],[18,-18],[-18,18],[18,18]]) {
-    const pl=new THREE.PointLight(0x224422,2,30); pl.position.set(cx,WALL_H-.5,cz); scene.add(pl);
+  // Corner neon flood lights
+  for (const [[cx,cz],col] of [[[-18,-18],0x00ffcc],[[18,-18],0xff00aa],[[-18,18],0xcc00ff],[[18,18],0x0088ff]]) {
+    const pl=new THREE.PointLight(col, 3, 36); pl.position.set(cx,WALL_H-.5,cz); scene.add(pl);
   }
 }
+
+// ===================================================================
+//  CYBERPUNK SKYBOX
+// ===================================================================
+let skyMat = null;
+function buildSkybox() {
+  skyMat = new THREE.ShaderMaterial({
+    side: THREE.BackSide,
+    depthWrite: false,
+    uniforms: { uTime: { value: 0.0 } },
+    vertexShader: `
+      varying vec3 vPos;
+      void main() { vPos=position; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }
+    `,
+    fragmentShader: `
+      varying vec3 vPos;
+      uniform float uTime;
+      float h1(float n){return fract(sin(n)*43758.5453);}
+      float h2(float x,float y){return fract(sin(x*127.1+y*311.7)*43758.5453);}
+      void main(){
+        vec3 d=normalize(vPos);
+        float y=d.y;
+
+        // Sky gradient: zenith=deep indigo, horizon=dark magenta-purple
+        vec3 sky=mix(vec3(.04,.01,.16),vec3(.01,.0,.06),clamp(y*1.8+.1,0.,1.));
+
+        // City light pollution glow at horizon
+        float hg=exp(-abs(y)*6.5);
+        sky+=vec3(.55,.05,.25)*hg*.18;   // warm orange-pink glow
+        sky+=vec3(.0,.4,.9)*exp(-abs(y+.04)*14.)*0.12; // cyan band
+
+        // Neon ad glow blobs (4 sources around horizon)
+        {
+          vec2 d2; float dot2,blob;
+          d2=vec2(cos(.4),sin(.4)); dot2=d.x*d2.x+d.z*d2.y;
+          blob=exp(-abs(y)*8.)*exp(-(1.-dot2)*18.);
+          sky+=vec3(0.,1.,.8)*blob*.10;
+          d2=vec2(cos(1.97),sin(1.97)); dot2=d.x*d2.x+d.z*d2.y;
+          blob=exp(-abs(y)*8.)*exp(-(1.-dot2)*18.);
+          sky+=vec3(1.,0.,.6)*blob*.10;
+          d2=vec2(cos(3.54),sin(3.54)); dot2=d.x*d2.x+d.z*d2.y;
+          blob=exp(-abs(y)*8.)*exp(-(1.-dot2)*18.);
+          sky+=vec3(.2,.4,1.)*blob*.10;
+          d2=vec2(cos(5.11),sin(5.11)); dot2=d.x*d2.x+d.z*d2.y;
+          blob=exp(-abs(y)*8.)*exp(-(1.-dot2)*18.);
+          sky+=vec3(.9,.2,1.)*blob*.10;
+        }
+
+        // Building silhouette at horizon
+        float ang=atan(d.z,d.x);
+        float bx=ang*7.;
+        float bf=floor(bx);
+        float bfrac=fract(bx);
+        float bh=h1(bf)*.14+.025;
+        float gap=step(.90,bfrac)+step(bfrac,.03);
+        bh*=(1.-gap*.6);
+        if(y<bh&&y>-.12){
+          sky=vec3(.008,.006,.018); // building silhouette
+          // Windows
+          float wx=bfrac*9.;
+          float wy=(y+.12)/(bh+.12)*7.;
+          float wHash=h2(floor(wx)+bf*31.7,floor(wy));
+          if(wHash>.52){
+            float wfx=fract(wx);float wfy=fract(wy);
+            if(wfx>.18&&wfx<.82&&wfy>.2&&wfy<.8){
+              float wc=h2(floor(wx)+bf*17.,floor(wy)+99.);
+              vec3 wCol=wc<.33?vec3(1.,.9,.3):wc<.66?vec3(.1,.9,1.):vec3(1.,.25,.7);
+              float flk=h2(floor(wx)+bf,floor(wy))>.82?step(.4,fract(uTime*(1.+wHash*4.))):1.;
+              sky=wCol*.85*flk;
+            }
+          }
+        }
+
+        // Stars above horizon
+        if(y>.08){
+          vec3 sp=d*45.;
+          float sr=length(fract(sp)-.5);
+          float sb=h1(floor(sp.x)+floor(sp.y)*127.+floor(sp.z)*311.);
+          if(sb>.965&&sr<.22){
+            float tw=.65+.35*sin(uTime*(2.+sb*6.));
+            sky+=vec3(.7,.8,1.)*tw*(1.-sr*4.5)*.9;
+          }
+        }
+
+        // Rain streaks in sky (animated)
+        float rx=fract(d.x*18.+uTime*.14)*2.-1.;
+        float rz=fract(d.z*18.+uTime*.14)*2.-1.;
+        float rainLine=exp(-abs(rx)*90.)*exp(-abs(d.y*.4+rz*.9)*28.)*.07;
+        sky+=vec3(.4,.6,.9)*rainLine;
+
+        gl_FragColor=vec4(sky,1.0);
+      }
+    `
+  });
+  const sky = new THREE.Mesh(new THREE.SphereGeometry(190,32,16), skyMat);
+  sky.name='skybox'; scene.add(sky);
+}
+
+// ===================================================================
+//  RAIN SYSTEM
+// ===================================================================
+const RAIN_COUNT = isMobile ? 1200 : 2400;
+const RAIN_AREA  = 70;
+const RAIN_H     = 26;
+const RAIN_SPEED = 22;
+let rainGeo = null, rainPos = null;
+
+function buildRain() {
+  rainPos = new Float32Array(RAIN_COUNT * 6);
+  for (let i=0; i<RAIN_COUNT; i++) {
+    const x=(Math.random()-.5)*RAIN_AREA, z=(Math.random()-.5)*RAIN_AREA;
+    const y=Math.random()*RAIN_H;
+    rainPos[i*6]=x;   rainPos[i*6+1]=y;      rainPos[i*6+2]=z;
+    rainPos[i*6+3]=x; rainPos[i*6+4]=y-.32;  rainPos[i*6+5]=z;
+  }
+  rainGeo = new THREE.BufferGeometry();
+  rainGeo.setAttribute('position', new THREE.BufferAttribute(rainPos,3));
+  const rainMesh = new THREE.LineSegments(rainGeo,
+    new THREE.LineBasicMaterial({color:0x4466aa,transparent:true,opacity:.28,depthWrite:false})
+  );
+  rainMesh.name='rain'; scene.add(rainMesh);
+  return rainMesh;
+}
+
+let rainMesh = null;
 
 // ===================================================================
 //  GUN MODEL
@@ -1084,6 +1234,17 @@ function startGame() {
   // Reset counters
   score=0; coins=0; wave=1; kills=0;
 
+  // Re-scatter rain around spawn point
+  if (rainPos) {
+    for (let i=0;i<RAIN_COUNT;i++) {
+      const rx=(Math.random()-.5)*RAIN_AREA, rz=(Math.random()-.5)*RAIN_AREA;
+      const ry=Math.random()*RAIN_H;
+      rainPos[i*6]=rx; rainPos[i*6+1]=ry; rainPos[i*6+2]=rz;
+      rainPos[i*6+3]=rx; rainPos[i*6+4]=ry-.32; rainPos[i*6+5]=rz;
+    }
+    if (rainGeo) rainGeo.attributes.position.needsUpdate=true;
+  }
+
   // Clear scene objects
   for (const e of enemies) scene.remove(e.group); enemies.length=0;
   ebarContainer.innerHTML='';
@@ -1176,10 +1337,27 @@ function updatePlayer(dt) {
 // ===================================================================
 //  MAIN LOOP
 // ===================================================================
-let lastT = 0;
+let lastT = 0, totalT = 0;
 function loop(ts) {
   requestAnimationFrame(loop);
   const dt=Math.min((ts-lastT)/1000,.05); lastT=ts;
+  totalT+=dt;
+
+  // Always tick skybox and rain (visible even in shop/dead states)
+  if (skyMat) skyMat.uniforms.uTime.value = totalT;
+  if (rainGeo && rainPos) {
+    const cx=camera.position.x, cz=camera.position.z;
+    for (let i=0; i<RAIN_COUNT; i++) {
+      rainPos[i*6+1]-=RAIN_SPEED*dt;
+      rainPos[i*6+4]-=RAIN_SPEED*dt;
+      if (rainPos[i*6+1]<0) {
+        const rx=(Math.random()-.5)*RAIN_AREA+cx, rz=(Math.random()-.5)*RAIN_AREA+cz;
+        rainPos[i*6]=rx;   rainPos[i*6+1]=RAIN_H;      rainPos[i*6+2]=rz;
+        rainPos[i*6+3]=rx; rainPos[i*6+4]=RAIN_H-.32;  rainPos[i*6+5]=rz;
+      }
+    }
+    rainGeo.attributes.position.needsUpdate=true;
+  }
 
   if (gState==='playing') {
     updatePlayer(dt);
@@ -1309,6 +1487,8 @@ window.addEventListener('resize',()=>{
 //  INIT
 // ===================================================================
 buildWorld();
+buildSkybox();
+rainMesh = buildRain();
 buildGun();
 setupDesktopInput();
 setupTouchInput();

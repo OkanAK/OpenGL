@@ -1,0 +1,10 @@
+{
+  "name": "glucose-reader-high-range",
+  "version": "1.0.0",
+  "description": "WebGL glucose reader that handles values past the 22.2 mmol/L (400 mg/dL) device cap",
+  "scripts": {
+    "test": "node tests/reader.test.js",
+    "serve": "python3 -m http.server 8000"
+  },
+  "license": "MIT"
+}

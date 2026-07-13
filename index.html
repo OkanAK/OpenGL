@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Glucose Reader — High Range (past 22 mmol/L)</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <h1>Glucose Reader <span class="tag">High Range</span></h1>
+      <p class="sub">Reads and visualizes values <strong>past the 22.2&nbsp;mmol/L (400&nbsp;mg/dL) device cap</strong> — where most meters just say “HIGH”. Rendered with WebGL.</p>
+    </div>
+  </header>
+
+  <p id="gl-error" class="gl-error" hidden></p>
+
+  <main class="grid">
+    <section class="card gauge-card">
+      <div class="canvas-wrap">
+        <canvas id="gauge-gl"></canvas>
+        <div id="gauge-overlay" class="overlay"></div>
+        <div class="readout">
+          <div class="readout-main">
+            <span id="readout-value" class="readout-value">--</span>
+            <span id="readout-unit" class="readout-unit">mmol/L</span>
+          </div>
+          <div id="readout-zone" class="readout-zone">no data</div>
+          <div id="readout-mgdl" class="readout-secondary"></div>
+          <div id="cap-badge" class="cap-badge" hidden></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card chart-card">
+      <h2>History <span class="hint">(auto-scaling · white line = 22.2 cap)</span></h2>
+      <div class="canvas-wrap chart-wrap">
+        <canvas id="chart-gl"></canvas>
+        <div id="chart-overlay" class="overlay"></div>
+      </div>
+    </section>
+
+    <section class="card controls-card">
+      <h2>Controls</h2>
+      <div class="controls">
+        <button id="btn-live" class="btn active">⏸ Pause feed</button>
+        <button id="btn-spike" class="btn">⚡ Force high spike</button>
+        <button id="btn-unit" class="btn">Unit: mmol/L</button>
+        <button id="btn-clear" class="btn ghost">Clear</button>
+      </div>
+
+      <h2>Load readings (CSV)</h2>
+      <p class="hint">Header <code>mmol</code> or <code>mg/dl</code>, optional <code>timestamp</code>. High values are kept, never clamped.</p>
+      <textarea id="csv-input" class="csv" spellcheck="false" placeholder="timestamp,mmol&#10;2026-07-13T08:00,25.8"></textarea>
+      <div class="controls">
+        <button id="btn-load-csv" class="btn">Load pasted CSV</button>
+        <button id="btn-sample" class="btn ghost">Load sample (spikes past cap)</button>
+        <label class="btn ghost file-btn">Open file…<input id="file-input" type="file" accept=".csv,text/csv" hidden /></label>
+      </div>
+      <p id="status" class="status"></p>
+
+      <h2>Zones</h2>
+      <ul id="legend" class="legend"></ul>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <span>Demo / educational visualization only — not a medical device. Values above 22.2&nbsp;mmol/L indicate a medical emergency; seek care.</span>
+  </footer>
+
+  <script src="js/reader.js"></script>
+  <script src="js/gl-utils.js"></script>
+  <script src="js/renderer.js"></script>
+  <script>
+    // Build the zone legend from the single source of truth in reader.js.
+    (function () {
+      const ul = document.getElementById('legend');
+      window.Glucose.ZONES.forEach(function (z) {
+        const li = document.createElement('li');
+        const sw = document.createElement('span');
+        sw.className = 'swatch'; sw.style.background = z.color;
+        const txt = document.createElement('span');
+        var range = z.key === 'extreme_high'
+          ? '≥ 22.2 mmol/L (past cap)'
+          : (Math.max(z.min, 0)).toFixed(1) + '+ mmol/L';
+        txt.textContent = z.label + ' — ' + range;
+        li.appendChild(sw); li.appendChild(txt); ul.appendChild(li);
+      });
+    })();
+  </script>
+  <script src="js/app.js"></script>
+</body>
+</html>

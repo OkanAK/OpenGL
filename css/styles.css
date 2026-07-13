@@ -1,0 +1,177 @@
+:root {
+  --bg: #0b0d11;
+  --panel: #12151d;
+  --panel-2: #161a22;
+  --line: #232838;
+  --text: #e8ecf3;
+  --muted: #8a93a6;
+  --accent: #3a7bd5;
+  --danger: #b8002e;
+}
+
+* { box-sizing: border-box; }
+/* Author display rules (e.g. .cap-badge below) otherwise beat the UA
+   [hidden]{display:none}, so the hidden attribute would stop working. */
+[hidden] { display: none !important; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  background:
+    radial-gradient(1200px 500px at 70% -10%, #17203020, transparent),
+    var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+.app-header {
+  padding: 20px 24px 8px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.app-header h1 {
+  margin: 0;
+  font-size: 22px;
+  letter-spacing: 0.2px;
+}
+.tag {
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(90deg, var(--danger), #eb4d4b);
+  padding: 2px 8px;
+  border-radius: 999px;
+  vertical-align: middle;
+  margin-left: 6px;
+}
+.sub { color: var(--muted); margin: 6px 0 0; font-size: 13.5px; max-width: 70ch; }
+.sub strong { color: var(--text); }
+
+.gl-error {
+  max-width: 1200px; margin: 8px auto; padding: 10px 24px;
+  color: #fff; background: var(--danger); border-radius: 8px;
+}
+
+.grid {
+  max-width: 1200px;
+  margin: 12px auto;
+  padding: 0 24px 24px;
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  grid-template-areas:
+    "gauge chart"
+    "gauge controls";
+  gap: 16px;
+}
+.gauge-card { grid-area: gauge; }
+.chart-card { grid-area: chart; }
+.controls-card { grid-area: controls; }
+
+@media (max-width: 900px) {
+  .grid { grid-template-columns: 1fr; grid-template-areas: "gauge" "chart" "controls"; }
+}
+
+.card {
+  background: linear-gradient(180deg, var(--panel), var(--panel-2));
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px;
+}
+.card h2 {
+  margin: 0 0 10px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--muted);
+}
+.hint { color: var(--muted); font-size: 12px; margin: 0 0 8px; font-weight: 400; text-transform: none; letter-spacing: 0; }
+.hint code, code { background: #0e1119; padding: 1px 5px; border-radius: 5px; color: #c7d0e0; font-size: 12px; }
+
+.canvas-wrap { position: relative; width: 100%; }
+.gauge-card .canvas-wrap { aspect-ratio: 1 / 0.82; }
+#gauge-gl { width: 100%; height: 100%; display: block; }
+.chart-wrap { height: 260px; }
+#chart-gl { width: 100%; height: 100%; display: block; border-radius: 10px; }
+
+.overlay { position: absolute; inset: 0; pointer-events: none; }
+.gl-label {
+  position: absolute;
+  font-size: 11px;
+  color: var(--muted);
+  transform: translate(0, 0);
+  white-space: nowrap;
+}
+.gl-label.cap { color: #fff; font-weight: 600; font-size: 10.5px; }
+.gl-label.tick { color: #6f7a90; }
+
+/* Center readout on the gauge */
+.readout {
+  position: absolute;
+  left: 50%; top: 56%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  pointer-events: none;
+  width: 60%;
+}
+.readout-main { display: flex; align-items: baseline; justify-content: center; gap: 6px; }
+.readout-value { font-size: 46px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+.readout-unit { font-size: 14px; color: var(--muted); }
+.readout-zone { margin-top: 4px; font-size: 14px; font-weight: 600; }
+.readout-secondary { margin-top: 2px; font-size: 12px; color: var(--muted); }
+.cap-badge {
+  margin: 8px auto 0;
+  display: inline-block;
+  background: var(--danger);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  animation: pulse 1.4s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.55; } }
+
+.controls { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.btn {
+  appearance: none;
+  border: 1px solid var(--line);
+  background: #1b2130;
+  color: var(--text);
+  padding: 8px 12px;
+  border-radius: 9px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.btn:hover { background: #222a3d; border-color: #33405a; }
+.btn.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+.btn.ghost { background: transparent; }
+.file-btn { display: inline-flex; align-items: center; }
+
+.csv {
+  width: 100%;
+  min-height: 90px;
+  resize: vertical;
+  background: #0e1119;
+  color: #c7d0e0;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 10px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+.status { font-size: 12.5px; color: var(--muted); min-height: 18px; margin: 6px 0 0; }
+
+.legend { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 6px; }
+.legend li { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: #c7d0e0; }
+.swatch { width: 14px; height: 14px; border-radius: 4px; flex: none; }
+
+.app-footer {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px 28px;
+  color: #6f7a90;
+  font-size: 12px;
+}

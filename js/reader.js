@@ -7,7 +7,7 @@
  * "extreme" zone above the usual cap — and never silently clamps.
  *
  * Written to run unchanged in the browser and in Node (for tests):
- *   - Browser:  <script src="js/reader.js"></script>  -> window.Glucose
+ *   - Browser:  load js/reader.js with a script tag   -> window.Glucose
  *   - Node:     const Glucose = require('./js/reader.js')
  */
 (function (root, factory) {

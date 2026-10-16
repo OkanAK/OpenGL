@@ -73,8 +73,13 @@ button {
   const pad = (n) => String(n).padStart(2, "0");
 
   try { $("medicare").value = localStorage.getItem(KEY) || ""; } catch (e) {}
-  const now = new Date();
-  $("month").value = now.getFullYear() + "-" + pad(now.getMonth() + 1);
+  // Always follow the current month unless the month was picked by hand.
+  let picked = false;
+  const thisMonth = () => { const n = new Date(); return n.getFullYear() + "-" + pad(n.getMonth() + 1); };
+  $("month").value = thisMonth();
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden && !picked && $("month").value !== thisMonth()) { $("month").value = thisMonth(); render(); }
+  });
 
   function fridaysOf(year, monthIdx) {
     const out = [];
@@ -97,7 +102,7 @@ button {
     try { localStorage.setItem(KEY, $("medicare").value.trim()); } catch (e) {}
     render();
   });
-  $("month").addEventListener("change", render);
+  $("month").addEventListener("change", () => { picked = $("month").value !== thisMonth(); render(); });
 
   $("copyBtn").addEventListener("click", () => {
     const ta = $("output");

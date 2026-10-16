@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Medicare Fridays</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+/* Layout: one short column — quick add, patient list, month, the lines, a copy button. */
+:root {
+  --bg: #f3f6f5;
+  --fg: #16231f;
+  --muted: #5b6b66;
+  --line: #cfdad6;
+  --field: #ffffff;
+  --accent: #0d6b57;
+  --accent-ink: #ffffff;
+  --font-body: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, Menlo, Consolas, "Courier New", monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #101816; --fg: #e4ece9; --muted: #95a8a1; --line: #2c3c37;
+    --field: #17221f; --accent: #4fc2a4; --accent-ink: #08201a; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #101816; --fg: #e4ece9; --muted: #95a8a1; --line: #2c3c37;
+  --field: #17221f; --accent: #4fc2a4; --accent-ink: #08201a; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.5 var(--font-body); }
+.wrap {
+  max-width: 520px; margin: 0 auto; display: grid; gap: 16px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 40px;
+}
+h1 { margin: 0; font-size: 1.6rem; }
+h2 { margin: 0; font-size: 1rem; }
+label { display: grid; gap: 4px; font-weight: 600; font-size: .9rem; }
+input, textarea {
+  font: inherit; color: var(--fg); background: var(--field);
+  border: 1px solid var(--line); border-radius: 6px; padding: 10px; width: 100%;
+}
+.mono, textarea { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+textarea { min-height: 200px; resize: vertical; line-height: 1.6; }
+input:focus-visible, textarea:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+button {
+  font: inherit; font-weight: 600; cursor: pointer; border: 0; border-radius: 6px;
+  padding: 12px 16px; background: var(--accent); color: var(--accent-ink);
+}
+button.small { padding: 6px 10px; font-size: .85rem; background: transparent; color: var(--muted); border: 1px solid var(--line); }
+.add { display: grid; gap: 10px; padding: 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--field); }
+.names { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.names > label { min-width: 0; }
+ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+li { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; }
+li .who { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+li .who .mono { color: var(--muted); font-size: .9rem; }
+.copyrow { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.toast { color: var(--accent); font-weight: 600; }
+.note { margin: 0; color: var(--muted); font-size: .85rem; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <h1>Medicare Fridays</h1>
+
+  <form id="addForm" class="add" autocomplete="off">
+    <h2>Quick add new patient</h2>
+    <label>Medicare number
+      <input id="medicare" class="mono" inputmode="numeric" placeholder="2123 45670 1" required>
+    </label>
+    <div class="names">
+      <label>First name <input id="first" placeholder="Jane"></label>
+      <label>Last name <input id="last" placeholder="Citizen"></label>
+    </div>
+    <p class="note">Tip: paste the whole line (number, first name, last name) into the Medicare box and it fills all three.</p>
+    <button type="submit">Add patient</button>
+  </form>
+
+  <ul id="people"></ul>
+
+  <label>Month
+    <input id="month" type="month">
+  </label>
+  <textarea id="output" readonly aria-label="Lines to copy"></textarea>
+  <div class="copyrow">
+    <button id="copyBtn" type="button">Copy</button>
+    <span id="toast" class="toast" role="status"></span>
+  </div>
+  <p class="note">Patients are saved on this device only.</p>
+</div>
+
+<script>
+(function () {
+  const KEY = "medicare-fridays-patients";
+  const OLD_KEY = "medicare-fridays-number";
+  const $ = (id) => document.getElementById(id);
+  const pad = (n) => String(n).padStart(2, "0");
+
+  let people = [];
+  try {
+    people = JSON.parse(localStorage.getItem(KEY) || "[]");
+    const old = localStorage.getItem(OLD_KEY);
+    if (!people.length && old) people = [{ medicare: old, first: "", last: "" }];
+  } catch (e) { people = []; }
+  // In the desktop app, patients are also kept in a file on the computer through /api/patients.
+  let useApi = false;
+  const save = () => {
+    try { localStorage.setItem(KEY, JSON.stringify(people)); } catch (e) {}
+    if (useApi) fetch("/api/patients", { method: "POST", body: JSON.stringify(people) }).catch(() => {});
+  };
+  if (location.protocol === "http:" && /^(127\.0\.0\.1|localhost)$/.test(location.hostname)) {
+    fetch("/api/patients").then((r) => r.json()).then((data) => {
+      if (!data || data.app !== "medicare-fridays" || !Array.isArray(data.patients)) return;
+      useApi = true;
+      if (data.patients.length || !people.length) people = data.patients;
+      else save();
+      renderList(); render();
+      setInterval(() => { fetch("/api/ping").catch(() => {}); }, 5000);
+    }).catch(() => {});
+  }
+
+  // Always follow the current month unless the month was picked by hand.
+  let picked = false;
+  const thisMonth = () => { const n = new Date(); return n.getFullYear() + "-" + pad(n.getMonth() + 1); };
+  $("month").value = thisMonth();
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden && !picked && $("month").value !== thisMonth()) { $("month").value = thisMonth(); render(); }
+  });
+
+  function fridaysOf(year, monthIdx) {
+    const out = [];
+    const d = new Date(year, monthIdx, 1);
+    d.setDate(1 + ((5 - d.getDay() + 7) % 7));
+    while (d.getMonth() === monthIdx) { out.push(new Date(d)); d.setDate(d.getDate() + 7); }
+    return out;
+  }
+  const label = (p) => [p.medicare, p.first, p.last].filter(Boolean).join(" ");
+
+  function renderList() {
+    const ul = $("people");
+    ul.innerHTML = "";
+    people.forEach((p, i) => {
+      const li = document.createElement("li");
+      const who = document.createElement("div");
+      who.className = "who";
+      const name = document.createElement("div");
+      name.textContent = [p.first, p.last].filter(Boolean).join(" ") || "No name";
+      const num = document.createElement("div");
+      num.className = "mono";
+      num.textContent = p.medicare;
+      who.append(name, num);
+      const rm = document.createElement("button");
+      rm.type = "button"; rm.className = "small"; rm.textContent = "Remove";
+      rm.addEventListener("click", () => {
+        if (rm.dataset.sure) { people.splice(i, 1); save(); renderList(); render(); }
+        else { rm.dataset.sure = "1"; rm.textContent = "Tap again to remove"; }
+      });
+      li.append(who, rm);
+      ul.appendChild(li);
+    });
+  }
+
+  function render() {
+    const [y, m] = ($("month").value || "").split("-").map(Number);
+    const days = y && m ? fridaysOf(y, m - 1) : [];
+    const list = people.length ? people : [{ medicare: "2123 45670 1", first: "Example", last: "Patient" }];
+    const lines = [];
+    list.forEach((p) => days.forEach((d) => {
+      lines.push(label(p) + " " + pad(d.getDate()) + "/" + pad(d.getMonth() + 1) + "/" + d.getFullYear());
+    }));
+    $("output").value = lines.join("\n");
+  }
+
+  // Paste "2123 45670 1 Jane Citizen" into the Medicare box to split it into the three fields.
+  $("medicare").addEventListener("paste", (e) => {
+    const text = (e.clipboardData || window.clipboardData).getData("text").trim();
+    const match = text.match(/^([\d\s\/-]*\d)[\s,;\t]+(.+)$/);
+    if (!match || !/[A-Za-z]/.test(match[2])) return;
+    e.preventDefault();
+    const words = match[2].split(/[\s,;\t]+/).filter(Boolean);
+    $("medicare").value = match[1].trim();
+    $("first").value = words.shift() || "";
+    $("last").value = words.join(" ");
+  });
+
+  $("addForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const medicare = $("medicare").value.trim();
+    if (!medicare) return;
+    people.push({ medicare, first: $("first").value.trim(), last: $("last").value.trim() });
+    save();
+    $("medicare").value = ""; $("first").value = ""; $("last").value = "";
+    renderList(); render();
+    $("toast").textContent = "";
+    $("medicare").focus();
+  });
+
+  $("month").addEventListener("change", () => { picked = $("month").value !== thisMonth(); render(); });
+
+  $("copyBtn").addEventListener("click", () => {
+    const ta = $("output");
+    const done = (ok) => {
+      $("toast").textContent = ok ? "Copied" : "Selected. Press Ctrl+C, or long-press and Copy.";
+      setTimeout(() => { $("toast").textContent = ""; }, 3000);
+    };
+    const fallback = () => {
+      ta.focus(); ta.select();
+      let ok = false;
+      try { ok = document.execCommand("copy"); } catch (e) {}
+      done(ok);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(ta.value).then(() => done(true), fallback);
+    } else fallback();
+  });
+
+  renderList(); render();
+})();
+</script>
+</body>
+</html>

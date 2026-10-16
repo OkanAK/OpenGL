@@ -106,7 +106,22 @@ li .who .mono { color: var(--muted); font-size: .9rem; }
     const old = localStorage.getItem(OLD_KEY);
     if (!people.length && old) people = [{ medicare: old, first: "", last: "" }];
   } catch (e) { people = []; }
-  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(people)); } catch (e) {} };
+  // In the desktop app, patients are also kept in a file on the computer through /api/patients.
+  let useApi = false;
+  const save = () => {
+    try { localStorage.setItem(KEY, JSON.stringify(people)); } catch (e) {}
+    if (useApi) fetch("/api/patients", { method: "POST", body: JSON.stringify(people) }).catch(() => {});
+  };
+  if (location.protocol === "http:" && /^(127\.0\.0\.1|localhost)$/.test(location.hostname)) {
+    fetch("/api/patients").then((r) => r.json()).then((data) => {
+      if (!data || data.app !== "medicare-fridays" || !Array.isArray(data.patients)) return;
+      useApi = true;
+      if (data.patients.length || !people.length) people = data.patients;
+      else save();
+      renderList(); render();
+      setInterval(() => { fetch("/api/ping").catch(() => {}); }, 5000);
+    }).catch(() => {});
+  }
 
   // Always follow the current month unless the month was picked by hand.
   let picked = false;

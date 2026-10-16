@@ -1,0 +1,354 @@
+<title>Medicare Fridays</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one narrow working column — patients, month, then the copy-ready block. */
+:root {
+  --bg: #f3f6f5;
+  --surface: #ffffff;
+  --fg: #16231f;
+  --muted: #5b6b66;
+  --line: #d5dfdb;
+  --accent: #0d6b57;
+  --accent-ink: #ffffff;
+  --warn: #9a5b00;
+  --soft: #e3eeea;
+  --font-display: "Fraunces", Georgia, serif;
+  --font-body: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #101816; --surface: #17221f; --fg: #e4ece9; --muted: #95a8a1;
+    --line: #2a3a35; --accent: #4fc2a4; --accent-ink: #08201a; --warn: #f0b45c; --soft: #1d2d29;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #101816; --surface: #17221f; --fg: #e4ece9; --muted: #95a8a1;
+  --line: #2a3a35; --accent: #4fc2a4; --accent-ink: #08201a; --warn: #f0b45c; --soft: #1d2d29;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--fg);
+  font: 15px/1.5 var(--font-body);
+}
+.wrap {
+  max-width: 640px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 48px;
+  display: grid; gap: 22px;
+}
+header h1 {
+  font-family: var(--font-display); font-weight: 600; font-size: 2rem;
+  line-height: 1.1; margin: 0; text-wrap: balance;
+}
+header p { margin: 6px 0 0; color: var(--muted); }
+section {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+  padding: 18px; display: grid; gap: 14px; min-width: 0;
+}
+h2 {
+  margin: 0; font-size: .78rem; font-weight: 600; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--muted);
+}
+label { font-size: .85rem; font-weight: 500; display: grid; gap: 4px; }
+input, select, textarea {
+  font: inherit; color: var(--fg); background: var(--bg);
+  border: 1px solid var(--line); border-radius: 6px; padding: 9px 10px; width: 100%;
+}
+input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px;
+}
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.row { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; }
+.row > label { flex: 1 1 160px; min-width: 0; }
+.row > label.irn { flex: 0 1 80px; }
+button {
+  font: inherit; font-weight: 600; cursor: pointer; border-radius: 6px;
+  padding: 9px 14px; border: 1px solid var(--accent); background: var(--accent); color: var(--accent-ink);
+}
+button.ghost { background: transparent; color: var(--accent); }
+button.link { border: 0; background: none; color: var(--muted); padding: 4px 6px; font-weight: 500; }
+button.link:hover { color: var(--fg); }
+.hint { font-size: .82rem; color: var(--muted); margin: 0; }
+.hint.warn { color: var(--warn); }
+ul.people { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+ul.people li {
+  display: flex; align-items: center; gap: 10px; padding: 8px 10px;
+  border: 1px solid var(--line); border-radius: 6px; background: var(--bg);
+}
+ul.people .who { flex: 1; min-width: 0; display: grid; }
+ul.people .who span:first-child { font-weight: 500; overflow-wrap: anywhere; }
+ul.people input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); }
+.empty { color: var(--muted); font-size: .9rem; margin: 0; }
+.fridays { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  font-family: var(--font-mono); font-size: .85rem; padding: 4px 10px; border-radius: 999px;
+  background: var(--soft); border: 1px solid var(--line);
+}
+.chip.last { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.status { font-size: .88rem; margin: 0; }
+.status strong { color: var(--accent); }
+textarea { min-height: 220px; resize: vertical; font-family: var(--font-mono); font-size: .88rem; line-height: 1.55; }
+.copyrow { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.toast { font-size: .88rem; color: var(--accent); font-weight: 600; }
+.example-tag {
+  font-size: .7rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--warn); border: 1px solid currentColor; border-radius: 4px; padding: 0 5px;
+}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Medicare Fridays</h1>
+    <p>Save each Medicare number once. Pick a month and copy every Friday with the number attached.</p>
+  </header>
+
+  <section aria-labelledby="h-people">
+    <h2 id="h-people">Patients</h2>
+    <form id="addForm" class="row" autocomplete="off">
+      <label>Name (optional)
+        <input id="name" placeholder="Jane Citizen">
+      </label>
+      <label>Medicare number
+        <input id="medicare" class="mono" inputmode="numeric" placeholder="2123 45670" required>
+      </label>
+      <label class="irn">IRN
+        <input id="irn" class="mono" inputmode="numeric" maxlength="1" placeholder="1">
+      </label>
+      <button type="submit">Add</button>
+    </form>
+    <p id="checkHint" class="hint" hidden></p>
+    <ul id="people" class="people"></ul>
+    <p class="hint">Saved only in this browser on this device. Nothing is sent anywhere.</p>
+  </section>
+
+  <section aria-labelledby="h-month">
+    <h2 id="h-month">Month</h2>
+    <div class="row">
+      <label>Month
+        <input id="month" type="month">
+      </label>
+      <label>Date style
+        <select id="dateStyle">
+          <option value="dmy">Fri 02/10/2026</option>
+          <option value="long">Friday 2 October 2026</option>
+          <option value="mdy">Fri 10/02/2026</option>
+        </select>
+      </label>
+      <label>Layout
+        <select id="layout">
+          <option value="block">Grouped by patient</option>
+          <option value="rows">One line per date (spreadsheet)</option>
+        </select>
+      </label>
+    </div>
+    <div id="fridays" class="fridays" aria-label="Fridays this month"></div>
+    <p id="status" class="status"></p>
+  </section>
+
+  <section aria-labelledby="h-out">
+    <h2 id="h-out">Ready to paste</h2>
+    <textarea id="output" readonly aria-label="Text to copy"></textarea>
+    <div class="copyrow">
+      <button id="copyBtn" type="button">Copy</button>
+      <span id="toast" class="toast" role="status"></span>
+    </div>
+  </section>
+</div>
+
+<script>
+(function () {
+  const KEY = "medicare-fridays-v1";
+  const $ = (id) => document.getElementById(id);
+  const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  const pad = (n) => String(n).padStart(2, "0");
+
+  // Example row shown only until the first real patient is added.
+  const EXAMPLE = { id: "example", name: "Example Patient", number: "2123456701", on: true, example: true };
+
+  let state = { people: [EXAMPLE], dateStyle: "dmy", layout: "block" };
+  try {
+    const saved = JSON.parse(localStorage.getItem(KEY) || "null");
+    if (saved && Array.isArray(saved.people)) state = Object.assign(state, saved);
+  } catch (e) {}
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} };
+
+  const digits = (s) => String(s || "").replace(/\D/g, "");
+  // Australian Medicare: 10 digits + optional 1-digit IRN, shown as "2123 45670 1 / 1"
+  function formatNumber(num) {
+    const d = digits(num);
+    if (d.length >= 10) {
+      const base = d.slice(0, 4) + " " + d.slice(4, 9) + " " + d.slice(9, 10);
+      return d.length > 10 ? base + " / " + d.slice(10, 11) : base;
+    }
+    return num;
+  }
+  // Check digit (9th) = weighted sum of first 8 digits with 1,3,7,9,1,3,7,9 mod 10
+  function checkMedicare(d) {
+    if (d.length < 10) return "Australian Medicare numbers have 10 digits (plus an optional IRN).";
+    if (!/^[2-6]/.test(d)) return "Australian Medicare numbers start with 2 to 6.";
+    const w = [1,3,7,9,1,3,7,9];
+    let sum = 0;
+    for (let i = 0; i < 8; i++) sum += Number(d[i]) * w[i];
+    if (sum % 10 !== Number(d[8])) return "The check digit doesn't match. Double-check the number.";
+    return "";
+  }
+
+  function fridaysOf(year, monthIdx) {
+    const out = [];
+    const d = new Date(year, monthIdx, 1);
+    d.setDate(1 + ((5 - d.getDay() + 7) % 7));
+    while (d.getMonth() === monthIdx) { out.push(new Date(d)); d.setDate(d.getDate() + 7); }
+    return out;
+  }
+  function fmtDate(d, style) {
+    if (style === "long") return "Friday " + d.getDate() + " " + MONTHS[d.getMonth()] + " " + d.getFullYear();
+    if (style === "mdy") return "Fri " + pad(d.getMonth() + 1) + "/" + pad(d.getDate()) + "/" + d.getFullYear();
+    return "Fri " + pad(d.getDate()) + "/" + pad(d.getMonth() + 1) + "/" + d.getFullYear();
+  }
+
+  const today = new Date();
+  $("month").value = today.getFullYear() + "-" + pad(today.getMonth() + 1);
+  $("dateStyle").value = state.dateStyle;
+  $("layout").value = state.layout;
+
+  function renderPeople() {
+    const ul = $("people");
+    ul.innerHTML = "";
+    if (!state.people.length) {
+      const p = document.createElement("p");
+      p.className = "empty";
+      p.textContent = "No patients yet. Add a Medicare number above.";
+      ul.appendChild(p);
+      return;
+    }
+    state.people.forEach((p) => {
+      const li = document.createElement("li");
+      const cb = document.createElement("input");
+      cb.type = "checkbox"; cb.checked = p.on !== false; cb.id = "on-" + p.id;
+      cb.setAttribute("aria-label", "Include " + (p.name || formatNumber(p.number)));
+      cb.addEventListener("change", () => { p.on = cb.checked; save(); renderOutput(); });
+      const who = document.createElement("label");
+      who.className = "who"; who.htmlFor = cb.id;
+      const n = document.createElement("span");
+      n.textContent = p.name || "Unnamed";
+      if (p.example) { n.append(" "); const t = document.createElement("span"); t.className = "example-tag"; t.textContent = "example"; n.appendChild(t); }
+      const m = document.createElement("span");
+      m.className = "mono"; m.textContent = formatNumber(p.number);
+      who.append(n, m);
+      const rm = document.createElement("button");
+      rm.type = "button"; rm.className = "link"; rm.textContent = "Remove";
+      rm.addEventListener("click", () => {
+        state.people = state.people.filter((x) => x !== p); save(); renderPeople(); renderOutput();
+      });
+      li.append(cb, who, rm);
+      ul.appendChild(li);
+    });
+  }
+
+  function currentFridays() {
+    const [y, m] = ($("month").value || "").split("-").map(Number);
+    if (!y || !m) return { list: [], y: 0, m: 0 };
+    return { list: fridaysOf(y, m - 1), y, m: m - 1 };
+  }
+
+  function renderMonth() {
+    const { list, y, m } = currentFridays();
+    const box = $("fridays");
+    box.innerHTML = "";
+    list.forEach((d, i) => {
+      const c = document.createElement("span");
+      c.className = "chip" + (i === list.length - 1 ? " last" : "");
+      c.textContent = "Fri " + d.getDate();
+      box.appendChild(c);
+    });
+    const st = $("status");
+    if (!list.length) { st.textContent = ""; return; }
+    const last = list[list.length - 1];
+    const t0 = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const days = Math.round((last - t0) / 86400000);
+    let msg = list.length + " Fridays in " + MONTHS[m] + " " + y + ". Last Friday: ";
+    st.textContent = msg;
+    const s = document.createElement("strong");
+    s.textContent = fmtDate(last, "long");
+    st.appendChild(s);
+    if (days === 0) st.append(" (today, time to copy).");
+    else if (days > 0 && days <= 31) st.append(" (in " + days + (days === 1 ? " day)." : " days)."));
+    else st.append(".");
+  }
+
+  function renderOutput() {
+    const { list } = currentFridays();
+    const people = state.people.filter((p) => p.on !== false);
+    const style = state.dateStyle;
+    let text = "";
+    if (state.layout === "rows") {
+      const lines = [];
+      people.forEach((p) => list.forEach((d) => {
+        lines.push([fmtDate(d, style), formatNumber(p.number), p.name || ""].join("\t").replace(/\t$/, ""));
+      }));
+      text = lines.join("\n");
+    } else {
+      text = people.map((p) => {
+        const head = (p.name ? p.name + " - " : "") + "Medicare " + formatNumber(p.number);
+        return [head].concat(list.map((d) => fmtDate(d, style))).join("\n");
+      }).join("\n\n");
+    }
+    $("output").value = text || "Add a patient and pick a month to see the dates here.";
+  }
+
+  $("medicare").addEventListener("input", () => {
+    const d = digits($("medicare").value + $("irn").value);
+    const hint = $("checkHint");
+    const msg = d.length >= 10 ? checkMedicare(d) : "";
+    hint.hidden = !msg; hint.textContent = msg; hint.className = "hint warn";
+  });
+
+  $("addForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const num = digits($("medicare").value).slice(0, 10);
+    const irn = digits($("irn").value).slice(0, 1);
+    if (!num) return;
+    const full = num + irn;
+    const warn = checkMedicare(full);
+    state.people = state.people.filter((p) => !p.example);
+    state.people.push({ id: Date.now().toString(36), name: $("name").value.trim(), number: full, on: true });
+    save();
+    $("name").value = ""; $("medicare").value = ""; $("irn").value = "";
+    const hint = $("checkHint");
+    hint.hidden = !warn;
+    hint.textContent = warn ? "Added, but check it: " + warn : "";
+    renderPeople(); renderOutput();
+    $("name").focus();
+  });
+
+  $("month").addEventListener("change", () => { renderMonth(); renderOutput(); });
+  $("dateStyle").addEventListener("change", () => { state.dateStyle = $("dateStyle").value; save(); renderOutput(); });
+  $("layout").addEventListener("change", () => { state.layout = $("layout").value; save(); renderOutput(); });
+
+  $("copyBtn").addEventListener("click", () => {
+    const ta = $("output");
+    const done = (ok) => {
+      $("toast").textContent = ok ? "Copied" : "Text selected. Press Ctrl+C (or long-press, Copy).";
+      setTimeout(() => { $("toast").textContent = ""; }, 3000);
+    };
+    const fallback = () => {
+      ta.focus(); ta.select();
+      let ok = false;
+      try { ok = document.execCommand("copy"); } catch (e) {}
+      done(ok);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(ta.value).then(() => done(true), fallback);
+    } else fallback();
+  });
+
+  renderPeople(); renderMonth(); renderOutput();
+})();
+</script>
